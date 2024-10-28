@@ -8,12 +8,16 @@ import streamlit as st
 
 @st.cache_data
 def load_data():
-    babelio_data = pd.read_csv('data/babelio_data.csv')
-    babelio_data['haiku'] = babelio_data['haiku'].astype('bool')
-    eclair_data = pd.read_csv('data/eclair_data.csv')
-    kerouac = pd.read_csv('data/haiku_kerouac.csv')
-    manual = pd.read_csv('data/manual author_data.csv')
-    data = pd.concat([babelio_data, eclair_data, kerouac, manual], ignore_index = True)
+    l_data = []
+    for datafile in ['babelio_data', 'eclair_data', 'haiku_kerouac', 'manual author_data']:
+        try:
+            df = pd.read_csv(f'data/{datafile}.csv')
+            df['haiku'] = df['haiku'].astype('bool')
+            l_data.append(df)
+        except Exception as e:
+            print(f"Unable to load {datafile}.csv", e)
+            
+    data = pd.concat(l_data, ignore_index = True)
     data.drop(columns = ['Unnamed: 0',"Unnamed: 0.1"], inplace = True)
     data['text'] = data['text'].astype(str)
     data['vo'] = data['vo'].astype(str)

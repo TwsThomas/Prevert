@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from unidecode import unidecode
 from scrap_utils import tokenize
+from copy import copy
 
 import streamlit as st
 from st_keyup import st_keyup # pip install streamlit-keyup
@@ -25,25 +26,40 @@ st.set_page_config(page_title= "Prevert", page_icon = "🦋", # "🎶🧞"
                     #     },
                         )
 
-st.title("🦋🦎🎶🔥🐉🧞🍄🌈🌚⛩️")
+st.title("🦋 🦎 🎶 🔥 🐉 🧞 🍄 🌈 🌚 ")
 all_emoji = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☢️⛩️🌚꩜🐘" + "𝄞☯︎☣☘︎꩜⛩❄⚝☠𓆝⚕️⚛♫𓆈𓆉𓆏𓆸𓃰𓃥𓆝"
 ### load data
 data = load_data()
+raw_data = copy(data)
+env = "web"
+if len(raw_data) > 5000:
+    env = "dev"
 
-@st.dialog("shortcut")
+def clear_cache():
+    # not tested
+    st.caching.clear_cache()
+    st.toast("Cache cleared")
+
+@st.dialog("Raccourcis dans la barre de recherche")
 def help():
     st.write('🦋🦎🎶🔥🐉🧞🍄🌈🌚⛩️')
-    st.write(' ?: random')
-    st.write(' + : 100')
-    st.write(' * : all')
-    st.write(' stats: overall statistics')
+    st.write('*?* : Classement aléatoire')
+    st.write('*+* : Top 100')
+    st.write('_*_ : Tout')
+    st.write(' _stats_: Statistiques')
+    st.write(' _save_: Sauvegarde les réactions (publie sur le web)')
 
 
 # cc = st.color_picker('ccc', '#349E77') # #349E77 vert #C79236 orange 
 # l_cc_haiku = ["#603D03", # marron               # "#38ECDE", # cyan               "#9A9317", # yellow               "#A45918", # orange               "#344AB1", # blue               "#8426B5", # purple               "#D25456", # red               "#94923A", # mousse               ]
 
-@st.dialog("Stats")
+# @st.dialog("Stats")
 def get_stats(ddata):
+
+    st.write(len(raw_data[raw_data['quote_react'].notnull()]) , "saved")
+    st.write(len(raw_data[raw_data['haiku']]) , "haikus")
+    st.write(len(raw_data[~raw_data['title'].isin({'nan', None, '', ' '})]) , "poèmes")
+
     ac = ddata.groupby('author')['text'].count()
     al = ddata.groupby('author')['nb_like'].sum()
     ah = ddata.groupby('author')['haiku'].sum()
@@ -53,10 +69,19 @@ def get_stats(ddata):
     stats = pd.merge(stats, ar, on = 'author').rename(columns = {'quote_react': 'Saved'})
     st.write(stats)
 
+def save_bookmark():
+    st.toast('🔥🦋🎶🐉🧞🍄🌈🌚⛩️')
+    saved_best = raw_data[raw_data['haiku']]
+    saved_best_2 = raw_data[raw_data['quote_react'].notnull()]
+    saved_best_3 = raw_data[~raw_data['title'].isin({'nan', None, '', ' '})]
+    saved_best = pd.concat([saved_best, saved_best_2, saved_best_3])
+    saved_best.to_csv('interactions/saved_best.csv', index = False)
+    st.toast(f'\n {len(saved_best)} bookmark saved')
+
 @st.dialog("Edit quote")
 def updating(quote):
     
-    lala = "🍄🐘🌚🧞⛩️"
+    lala = "🍄🐘🌚🧞⛩️" + ("🌈" if quote.haiku else "")
     le_col = st.columns([1]*(len(lala)) + [5], vertical_alignment = "center")
     for i, icon in enumerate(lala):
         with le_col[i]:
@@ -71,6 +96,7 @@ def updating(quote):
     new_author = st.text_input("Auteur", value = quote.author)
     kill_react = st.button("Retirer les réactions ☢️", key = get_rnd_key(),
                            on_click=remove_react, args=[quote.text_tok,])
+    add_note = st.text_area("Notes", value = quote.vo)
 
     if new_text != str(quote.text):
         new_text_saved = new_text.replace('\n','  /n/')
@@ -79,7 +105,9 @@ def updating(quote):
         update_quote(quote.text_tok, 'author', new_author)
     if new_title != str(quote.title):
         update_quote(quote.text_tok, 'title', new_title)
-
+    if add_note != str(quote.vo):
+        new_note_saved = add_note.replace('\n','  /n/')
+        update_quote(quote.text_tok, 'vo', new_note_saved)
 
 ### UI
 def emoji_action(data, emoji):
@@ -88,35 +116,38 @@ def emoji_action(data, emoji):
     if emoji == "🦋":
         st.toast(f"🦋 {search_query}")
 
-lele = "🔥🦋🎶🐉🧞🍄🌈"
-le_col = st.columns([4]*(len(lele)+1) + [30], vertical_alignment = "center")
-with le_col[0]:
-    st.button("Help", key = get_rnd_key(), on_click = help)
-    # st.button("Stats", key = get_rnd_key(), on_click = get_stats, args = [data])
-for i in range(len(lele)):
-    with le_col[i+1]:
-        st.button(lele[i], key = get_rnd_key(), on_click = emoji_action, args = [data, lele[i]])
+if env == "log":
+    lele = "🔥🦋🎶🐉🧞🍄🌈"
+    le_col = st.columns([4]*(len(lele)+1) + [30], vertical_alignment = "center")
+    with le_col[0]:
+        st.button("Help", key = get_rnd_key(), on_click = help)
+        # st.button("Stats", key = get_rnd_key(), on_click = get_stats, args = [data])
+    for i in range(len(lele)):
+        with le_col[i+1]:
+            st.button(lele[i], key = get_rnd_key(), on_click = emoji_action, args = [data, lele[i]])
 
 # search_query = st.text_input("🐘").lower()
 search_query = st_keyup(label = "Enter a value", key="uuid_keyup",
                          label_visibility="collapsed", debounce=400)
 nb_columns = 2
 all_expanded = True # st.toggle("Expand all", value = False)
+show_action_buttons = env == "dev"
 
 list_col_ui = st.columns([1]*7, vertical_alignment = "center")
 # with list_col_ui[0]:
     # only_popular = st.toggle("Only popular", value = False) # 
     # like_cap = st.slider("Like", 0, 100, 0, label_visibility = 'collapsed')
     # like_cap = 20 if only_popular else 0
-with list_col_ui[0]:
-    only_haiku = st.toggle("Only haiku", value = False)
+with list_col_ui[0]:    
+    only_haiku = st.toggle("Haiku", value = False)
 with list_col_ui[1]:
-    only_react = st.toggle("Only saved", value = False)
+    only_title = st.toggle("Poème", value = False)
 with list_col_ui[2]:
-    only_title = st.toggle("Only title", value = False)
+    only_react = True
+    if env == "dev":
+        only_react = st.toggle("Réactions", value = False)
 with list_col_ui[-1]:
-    hide_action_buttons = st.toggle("Hide actions", value = False)
-    show_action_buttons = not(hide_action_buttons)
+    st.button("Help", key = get_rnd_key(), on_click = help)
 
 
 ### Filter data
@@ -152,7 +183,9 @@ for ii, (row, data) in enumerate(stats.iterrows()):
     else:
         author_options.append('...')
         break
-select_author = st.radio("radio", options= author_options,
+select_author = None
+if env == "dev":
+    select_author = st.radio("radio", options= author_options,
           horizontal= True, label_visibility = 'collapsed')
 
 if select_author is None:
@@ -168,21 +201,27 @@ else:
 
 ### Display data
 if '?' in search_query:
-    current_data = current_data.sample(frac = 1, replace=False, random_state = sum(['?' == x for x in search_query]))
+    current_data = current_data.sample(frac = 1, replace=False, random_state = len(search_query))
 display_data = current_data[:30]
 if "+" in search_query:
     display_data = current_data[:100]
 if "*" in search_query:
     display_data = current_data
 if "stats" in search_query:
-    get_stats(data)
+    get_stats(raw_data)
+if "help" in search_query:
+    help()
+if "save" in search_query:
+    save_bookmark()
 if search_query == "":
-    display_data = current_data[:500].sample(n = 20, replace=False)
+    display_data = current_data[:500].sample(n = min([len(current_data), 20]), replace=False)
 
 list_col = st.columns(nb_columns)
 for i, quote in enumerate(display_data.itertuples()):
     always_expand = quote.nb_lines < 4 and quote.nb_char < 400
     current_expand = all_expanded or always_expand
+    if len(quote.text)> 1500:
+        current_expand = False
     like_str = f'{int(np.round(quote.nb_like, 0))}' if (str(quote.nb_like) not in ['nan', '0', '0.0', '0.', 'None']) else ""
     title_str = f"{quote.title if (str(quote.title) != 'nan' and len(str(quote.title)) > 1) else ''}" 
     
@@ -222,6 +261,7 @@ for i, quote in enumerate(display_data.itertuples()):
             st.write(f":orange[{quote.title}]")
 
         if quote.haiku:
+            st.write("  ")
             st.write(f"{quote.text}")
         else:
             st.write(f"{quote.text}")

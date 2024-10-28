@@ -9,16 +9,16 @@ import streamlit as st
 @st.cache_data
 def load_data():
     l_data = []
-    for datafile in ['babelio_data', 'eclair_data', 'haiku_kerouac', 'manual author_data']:
+    for datafile in ['interactions/saved_best', 'data/babelio_data', 'data/eclair_data', 'data/haiku_kerouac', 'data/manual author_data']:
         try:
-            df = pd.read_csv(f'data/{datafile}.csv')
+            df = pd.read_csv(f'{datafile}.csv')
             df['haiku'] = df['haiku'].astype('bool')
             l_data.append(df)
         except Exception as e:
             print(f"Unable to load {datafile}.csv", e)
-            
+
     data = pd.concat(l_data, ignore_index = True)
-    data.drop(columns = ['Unnamed: 0',"Unnamed: 0.1"], inplace = True)
+    # data.drop(columns = ['Unnamed: 0',"Unnamed: 0.1"], inplace = True)
     data['text'] = data['text'].astype(str)
     data['vo'] = data['vo'].astype(str)
     data['title'] = data['title'].astype(str)
@@ -57,7 +57,8 @@ def load_data():
                     data.loc[text_tok, column] = new_value.replace('/n/', '\n')
     except Exception as e:
         print('unable to load - quote_update.txt', e, e.__class__, e.__class__.__name__)
-
+        print(line)
+        raise(e)
     data['quote_react'] = data.text_tok.apply(lambda txt: "".join(d_quote_react.get(txt, None)) if txt in d_quote_react else None)
     data['all_search'] = (data['text_tok'].astype(str)) + (data['text'].astype(str)) + (data['author'].astype(str).apply(tokenize)) + (data['book'].astype(str).apply(tokenize)) + (data['title'].astype(str).apply(tokenize)) + data['quote_react'].astype(str)
     data['haiku'] = data['haiku'] & (data['nb_lines'] == 3)

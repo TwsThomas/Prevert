@@ -3,9 +3,13 @@
 - Bobin
 - + search into books & create quote.
 
+- Eluard
+
 - tags (gpt + search / dataframe)
 - pip install streamlit-shortcuts
 - more haikus
-- save from web
+- save from web (Postgre ?)
 - print
 - share with url
+
+

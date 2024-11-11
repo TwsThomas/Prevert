@@ -3,9 +3,12 @@
 from collections import defaultdict
 import pandas as pd
 import numpy as np
+import pandas_gbq
 from unidecode import unidecode
 from scrap_utils import tokenize
 from copy import copy
+
+from google.oauth2 import service_account
 
 import streamlit as st
 from st_keyup import st_keyup # pip install streamlit-keyup
@@ -19,21 +22,44 @@ from utils import *
 np.set_printoptions(precision=0)
 st.set_page_config(page_title= "Prevert", page_icon = "🦋", # "🎶🧞"
                     layout="wide", # centered, wide
-                    # menu_items={
-                    #     'Get Help': 'https://www.extremelycoolapp.com/help',
-                    #     'Report a bug': "https://www.extremelycoolapp.com/bug",
-                    #     'About': "# This is a header. This is an *extremely* cool app!"
-                    #     },
-                        )
+                )
 
 st.title("🦋 🦎 🎶 🔥 🐉 🧞 🍄 🌈 🌚 ")
 all_emoji = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☢️⛩️🌚꩜🐘" + "𝄞☯︎☣☘︎꩜⛩❄⚝☠𓆝⚕️⚛♫𓆈𓆉𓆏𓆸𓃰𓃥𓆝"
+
 ### load data
 data = load_data()
 raw_data = copy(data)
 env = "web"
 if len(raw_data) > 5000:
     env = "dev"
+
+
+# Create API client.
+# client = bigquery.Client(credentials=credentials)
+
+@st.cache_data()
+def run_bigquery(query):
+    credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"])
+    rows_raw = pd.read_gbq(query, credentials=credentials)
+    # Convert to list of dicts. Required for st.cache_data to hash the return value.
+    rows = [dict(row) for row in rows_raw]
+    return rows
+
+# def insert_bq():
+#     INSERT INTO `prevert.v1.sample` 
+#     SELECT (3, "soubaba", "Capucine", 2002)
+
+# st.write(client)
+# st.write(credentials)
+# st.write('start')
+# query = "SELECT * from `prevert.v1.sample` limit 10"
+# st.write(query)
+# rows_raw = pandas_gbq.read_gbq(query, credentials=credentials)
+# st.write("rqst received")
+# st.write(rows_raw)
+# st.write('Done')
+
 
 def clear_cache():
     # not tested
@@ -257,7 +283,7 @@ for i, quote in enumerate(display_data.itertuples()):
         expanded = current_expand,
         icon = None):
 
-        if str(quote.title) != 'nan':
+        if str(quote.title) != 'nan' and len(str(quote.title)) > 1:
             st.write(f":orange[{quote.title}]")
 
         if quote.haiku:
@@ -302,27 +328,6 @@ for i, quote in enumerate(display_data.itertuples()):
                                help = "Supprimer la citation", on_click = delete_quote,
                                 args = [quote.text_tok,])
         
-                    # with list_col_button[-2]:
-            #     with st.popover("🧞", use_container_width = True):
-            #         extra_symbols = "🌈,🌚,☘️,☢️,⛩️,🌚,꩜,🐘".split(',')
-            #         # btn = sac.buttons(extra_symbols, key=f"{np.random.randint(9999999999)}",
-            #         #                   use_container_width=True, on_change=save_quote, args=[quote.text_tok, "x"])
-            #         for sym in extra_symbols:
-            #             st.button(sym, key = f"{sym}, {np.random.randint(9999999999)}",
-            #                       on_click = save_quote,
-            #                       args = [quote.text_tok, sym])           
-                # sac.buttons([sac.ButtonsItem(icon=sac.BsIcon(name='fire', size=50, color='dark'))], align='center', variant='text', index=None)
-                # btn = sac.buttons(
-                #     items=['button1', 'button2', 'button3'],
-                #     index=0,
-                #     format_func='title',
-                #     align='center',
-                #     direction='horizontal',
-                #     radius='lg',
-                #     return_index=False,
-                # )
-                # st.write(f'The selected button label is: {btn}')
-
 if len(display_data) == 30:
-    if st.button("Load more", key = f"aze + {np.random.randint(9999999999)}"):
+    if st.button("Load more", key = get_rnd_key()):
         search_query += "+"

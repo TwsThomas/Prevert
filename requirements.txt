@@ -3,3 +3,6 @@ numpy
 streamlit
 unidecode
 streamlit-keyup
+google-cloud-bigquery
+pandas-gbq
+tqdm

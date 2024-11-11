@@ -25,8 +25,8 @@ class Quote():
             vo = re.sub(r'\n', '  \n', vo) 
             vo = vo.strip(' ,."()«»[]' + "'").replace("", "'").replace('', 'oe')
         # if no punctuation at the end, add a dot
-        if len(text) > 0 and text[-1] not in ['.', '!', '?'] and not(haiku):
-            text += '.'
+        # if len(text) > 0 and text[-1] not in ['.', '!', '?'] and not(haiku):
+        #     text += '.'
         if len(text) > 0 and text is not None:
             text = text[0].upper() + text[1:]
 

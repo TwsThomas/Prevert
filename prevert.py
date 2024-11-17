@@ -3,9 +3,7 @@
 from collections import defaultdict
 import pandas as pd
 import numpy as np
-import pandas_gbq
 from unidecode import unidecode
-from scrap_utils import tokenize
 from copy import copy
 
 import streamlit as st

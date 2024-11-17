@@ -5,3 +5,4 @@ raw_data*/*
 __pycache__/*
 .devcontainer/*
 .vscode/*
+*.ipynb_checkpoints/*

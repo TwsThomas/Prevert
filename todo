@@ -4,12 +4,9 @@
 - Eluard
 - more haikus
 
-- pickle public
-- save from web (Postgre ?)
-- share with url
-- search into full books & create quote.
+- create quote.
+- share with url and paragraph within
+- search into full books
 - tags (gpt + search / dataframe)
 - pip install streamlit-shortcuts
 - print
-
-iter blabla

@@ -8,6 +8,11 @@ from google.oauth2 import service_account
 
 import streamlit as st
 
+bq_insert_query_intro = f"""INSERT INTO `prevert.v1.events` 
+(timestamp,text_tok,source,action,field,new_value,create_title,create_author,create_note) 
+VALUES 
+"""
+
 @st.cache_data
 def load_data():
     data_v1 = pd.read_parquet('data_v2/raw_data_v1_17_nov.parquet')
@@ -62,18 +67,17 @@ def get_stats(ddata, raw_data):
 def bq_insert_event(text_tok, action, column=None, new_value=None,title=None,author=None,note=None, context=None):
     try:
         credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"])
-        query = f"""INSERT INTO `prevert.v1.events` 
-        (timestamp,text_tok,source,action,field,new_value,create_title,create_author,create_note) 
-        VALUES 
-        (CURRENT_timestamp(), "{text_tok}", "{context}", "{action}", "{column}", "{new_value}", "{title}", "{author}", "{note}")
-        """
-        pd.read_gbq(query, credentials=credentials)
+        query_value = f'(CURRENT_timestamp(), "{text_tok}", "{context}", "{action}", "{column}", "{new_value}", "{title}", "{author}", "{note}")'
+        if context == "localhost":
+            with open('batch_query_value.txt', 'a') as f:
+                f.write(query_value + ' ,\n')
+            st.toast("batched")
+        else:
+            pd.read_gbq(bq_insert_query_intro + '\n' + query_value, credentials=credentials)
     except Exception as e:
         print('unable to insert event', e,  e.__class__.__name__, e.__class__,)
         st.write('unable to insert event', e,  e.__class__.__name__, e.__class__,)
         st.toast('e.__class__')
-        print(query)
-        st.write(query)
 
 def delete_quote(text_tok, context):
     bq_insert_event(text_tok, action = "delete", context=context)
@@ -108,7 +112,7 @@ def updating(quote, context):
     new_author = st.text_input("Auteur", value = quote.author)
     kill_react = st.button("Retirer les réactions ☢️", key = get_rnd_key(),
                            on_click=remove_react, args=[quote.text_tok,context])
-    add_note = st.text_area("Notes", value = quote.vo)
+    # add_note = st.text_area("Notes", value = quote.vo)
 
     if new_text != str(quote.text):
         new_text_saved = new_text.replace('\n','  /n/')
@@ -117,9 +121,9 @@ def updating(quote, context):
         update_quote(quote.text_tok, 'author', new_author, context)
     if new_title != str(quote.title):
         update_quote(quote.text_tok, 'title', new_title, context)
-    if add_note != str(quote.note):
-        new_note_saved = add_note.replace('\n','  /n/')
-        update_quote(quote.text_tok, 'vo', new_note_saved, context)
+    # if add_note != str(quote.note):
+    #     new_note_saved = add_note.replace('\n','  /n/')
+    #     update_quote(quote.text_tok, 'vo', new_note_saved, context)
 
 def dump_raw(raw_data):
     # import pickle

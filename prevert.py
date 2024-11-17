@@ -128,12 +128,33 @@ if "author;quote;" in search_query:
 if "help" in search_query:
     help()
 if "get_context" in search_query:
+    with open('batch_query_value.txt', 'r') as f:
+            query_values = f.read()[:-1]
+    st.write(bq_insert_query_intro + query_values)
     st.write(st.context.headers)
     st.stop()
 if "re-dump BQ" in search_query:
     """ Download the data from BigQuery (with compiled events) 
     and save it as a parquet file for app loading in web mode """
     pass
+if "batch_bq" in search_query:
+    """ Insert into bq.events all batch_query_value.txt """
+    try:
+        with open('batch_query_value.txt', 'r') as f:
+            query_values = f.read()[:-2] # remove last comma
+            credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"])
+            pd.read_gbq(bq_insert_query_intro + query_values, credentials=credentials)
+            st.toast("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
+            st.write("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
+        with open('batch_query_value.txt', 'w') as f:
+            f.write("")
+
+    except Exception as e:
+        print('unable to insert event', e,  e.__class__.__name__, e.__class__,)
+        st.write('unable to insert event', e,  e.__class__.__name__, e.__class__,)
+        st.toast(e.__class__)
+        st.stop()
+    st.stop()
 
 # TODO: if "author;text;" in search_query:
 #     create_quote(author, text)

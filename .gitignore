@@ -5,6 +5,3 @@ raw_data*/*
 __pycache__/*
 .devcontainer/*
 .vscode/*
-*.pyc
-__pycache__/*
-.devcontainer/*

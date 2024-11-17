@@ -6,3 +6,4 @@ streamlit-keyup
 google-cloud-bigquery
 pandas-gbq
 tqdm
+google-auth

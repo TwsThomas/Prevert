@@ -4,6 +4,8 @@ import numpy as np
 from unidecode import unidecode
 from scrap_utils import tokenize
 
+from google.oauth2 import service_account
+
 import streamlit as st
 
 @st.cache_data
@@ -15,67 +17,6 @@ def load_data():
     data_v1['all_search'] = (data_v1['text_tok'].astype(str)) + (data_v1['text'].astype(str)) + (data_v1['author'].astype(str).apply(tokenize)) + (data_v1['book'].astype(str).apply(tokenize)) + (data_v1['title'].astype(str).apply(tokenize)) + data_v1['quote_react'].astype(str)
     return data_v1
 
-@st.cache_data
-def load_data_v1():
-    l_data = []
-    for datafile in ['interactions/saved_best', 'data/babelio_data', 'data/eclair_data', 'data/haiku_kerouac', 'data/manual author_data']:
-        try:
-            df = pd.read_csv(f'{datafile}.csv')
-            df['haiku'] = df['haiku'].astype('bool')
-            l_data.append(df)
-        except Exception as e:
-            print(f"Unable to load {datafile}.csv", e)
-
-    data = pd.concat(l_data, ignore_index = True)
-    # data.drop(columns = ['Unnamed: 0',"Unnamed: 0.1"], inplace = True)
-    data['text'] = data['text'].astype(str)
-    data['vo'] = data['vo'].astype(str)
-    data['title'] = data['title'].astype(str)
-    data['haiku'] = data['haiku'].astype(bool)
-    data['sonnet'] = data['sonnet'].astype(bool)
-    data = data.sort_values('nb_like', ascending = False)
-    data['text_tok'] = data['text'].apply(lambda x: tokenize(x))
-    data.drop_duplicates(subset = ['text_tok'], inplace=True)
-    data.set_index('text_tok', inplace = True, drop = False)
-
-    # add saved quote
-    data['quote_react'] = None
-    d_quote_react = defaultdict(list)
-    try:
-        with open("interactions/quote_react.txt", "r") as f:
-            for line in f:
-                icon = line[0].replace("⛩", "⛩️")
-                d_quote_react[tokenize(line[1:])] += [icon]
-                # st.toast(icon + '**' + line[1:])
-    except Exception as e:
-        print('unable to load - quote_react.txt', e)
-    set_quote_deleted = set()
-    # remove deleted quote
-    try:
-        with open("interactions/quote_deleted.txt", "r") as f:
-            for line in f:
-                set_quote_deleted.add(line.strip())
-    except Exception as e:
-        print('unable to load - quote_deleted.txt', e)
-    # update quote modified
-    try:
-        with open("interactions/quote_update.txt", "r") as f:
-            for line in f:
-                text_tok, column, new_value = line.strip().split('$')
-                if text_tok in data.index:
-                    data.loc[text_tok, column] = new_value.replace('/n/', '\n')
-    except Exception as e:
-        print('unable to load - quote_update.txt', e, e.__class__, e.__class__.__name__)
-        print(line)
-        raise(e)
-    data['quote_react'] = data.text_tok.apply(lambda txt: "".join(d_quote_react.get(txt, None)) if txt in d_quote_react else None)
-    data['all_search'] = (data['text_tok'].astype(str)) + (data['text'].astype(str)) + (data['author'].astype(str).apply(tokenize)) + (data['book'].astype(str).apply(tokenize)) + (data['title'].astype(str).apply(tokenize)) + data['quote_react'].astype(str)
-    data['haiku'] = data['haiku'] & (data['nb_lines'] == 3)
-    data["nb_like"] = data["nb_like"].apply(lambda a: a if str(a) not in ['nan', 'None'] else 0) + data['quote_react'].apply(lambda x: 50 * len(x) if x else 0)
-    data = data[~data.text_tok.isin(set_quote_deleted)]
-    data.sort_values('nb_like', ascending = False, inplace = True)
-    return data
-
 def get_rnd_key():
     return str(np.random.randint(1000000000))
 def print_int(x):
@@ -83,34 +24,6 @@ def print_int(x):
     if x > 1000:
         return str(int(np.round(x/1000, 0))) + "k"
     return str(int(np.round(x, 0)))
-
-def save_quote(q, icon, toast = True):
-    if toast:
-        st.toast(icon + icon+\
-             f' \n \n  {q}')
-    with open("interactions/quote_react.txt", "a") as f:
-        # st.toast(":orange[NOT SAVED]")
-        f.write(f"{icon}{q}\n")
-
-def delete_quote(q):
-    st.toast(f'⨂ Delete: "{q}"')
-    with open("interactions/quote_deleted.txt", "a") as f:
-        f.write(f"{q}\n")
-
-def update_quote(text_tok, column, new_value):
-    with open("interactions/quote_update.txt", "a") as f:
-        f.write(f"{text_tok}${column}${new_value}\n")
-    st.toast(f'Edit {column} \n\n  {new_value}')
-    # data.loc[data.text_tok == text_tok, column] = new_value
-
-def remove_react(text_tok):
-    with open("interactions/quote_react.txt", "r") as f:
-        lines = f.readlines()
-    with open("interactions/quote_react.txt", "w") as f:
-        for line in lines:
-            if text_tok not in line:
-                f.write(line)
-    # st.toast(f'☢️ Reactions removed ☢️ ')
 
 def clear_cache():
     # not tested
@@ -124,15 +37,16 @@ def help():
     st.write('*+* : Top 100')
     st.write('_*_ : Tout')
     st.write(' _stats_: Statistiques')
-    st.write(' _save_: Sauvegarde les réactions (publique sur le web)')
+    st.write(' _Auteur;citation;_: Ajoute la citation (todo)')
 
 
 # @st.dialog("Stats")
 def get_stats(ddata, raw_data):
 
-    st.write(len(raw_data[raw_data['quote_react'].notnull()]) , "saved")
+    st.write(len(raw_data[raw_data['quote_react'].notnull()]) , "emojis")
     st.write(len(raw_data[raw_data['haiku']]) , "haikus")
     st.write(len(raw_data[~raw_data['title'].isin({'nan', None, '', ' '})]) , "poèmes")
+    st.write(len(raw_data), "citations")
 
     ac = ddata.groupby('author')['text'].count()
     al = ddata.groupby('author')['nb_like'].sum()
@@ -144,25 +58,45 @@ def get_stats(ddata, raw_data):
     stats.sort_values('Saved', ascending = False, inplace = True)
     st.write(stats)
 
-def save_bookmark(raw_data):
-    """ Save the best (i.e. reacted) quote into saved_best.csv (to export on web) """
-    st.toast('🔥🦋🎶🐉🧞🍄🌈🌚⛩️')
-    saved_best = raw_data[raw_data['haiku']]
-    saved_best_2 = raw_data[raw_data['quote_react'].notnull()]
-    saved_best_3 = raw_data[~raw_data['title'].isin({'nan', None, '', ' '})]
-    saved_best = pd.concat([saved_best, saved_best_2, saved_best_3])
-    saved_best.to_csv('interactions/saved_best.csv', index = False)
-    st.toast(f'\n {len(saved_best)} bookmark saved')
+
+def bq_insert_event(text_tok, action, column=None, new_value=None,title=None,author=None,note=None, context=None):
+    credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"])
+    st.toast(f'Edit {column} \n\n  {new_value}')
+    query = f"""INSERT INTO `prevert.v1.events` 
+    (timestamp,text_tok,source,action,field,new_value,create_title,create_author,create_note) 
+    VALUES 
+    (CURRENT_timestamp(), "{text_tok}", "{env}", "{action}", "{column}", "{new_value}", "{title}", "{author}", "{note}")
+    """
+    st.toast(query)
+    st.write(query)
+    pd.read_gbq(query, credentials=credentials)
+
+
+def delete_quote(text_tok, context):
+    bq_insert_event(text_tok, action = "delete", context=context)
+    st.toast(f'⨂ Deleted: \n\n  "{text_tok}"')
+
+def update_quote(text_tok, column, new_value, context):
+    bq_insert_event(text_tok, action="update", column=column, new_value=new_value, context=context)
+    st.toast(f'✏ Edited {column} \n\n  {new_value}')
+
+def add_react(text_tok, icon, context):
+    bq_insert_event(text_tok, action="react", new_value=icon, context=context)
+    st.toast(icon)
+
+def remove_react(text_tok, context):
+    st.toast(f'☢️ Reactions removed not implemented yet ☢️ ')
+
 
 @st.dialog("Edit quote")
-def updating(quote):
+def updating(quote, context):
     
     lala = "🍄🐘🌚🧞⛩️" + ("🌈" if quote.haiku else "")
     le_col = st.columns([1]*(len(lala)) + [5], vertical_alignment = "center")
     for i, icon in enumerate(lala):
         with le_col[i]:
             st.button(icon, key = get_rnd_key(), 
-                      on_click = save_quote, args = [quote.text_tok, icon, False]) 
+                      on_click = add_react, args = [quote.text_tok, icon, context]) 
             
     new_title = quote.title
     new_text = quote.text
@@ -171,19 +105,19 @@ def updating(quote):
     new_text = st.text_area("Citation", value = quote.text)
     new_author = st.text_input("Auteur", value = quote.author)
     kill_react = st.button("Retirer les réactions ☢️", key = get_rnd_key(),
-                           on_click=remove_react, args=[quote.text_tok,])
+                           on_click=remove_react, args=[quote.text_tok,context])
     add_note = st.text_area("Notes", value = quote.vo)
 
     if new_text != str(quote.text):
         new_text_saved = new_text.replace('\n','  /n/')
-        update_quote(quote.text_tok, 'text', new_text_saved)
+        update_quote(quote.text_tok, 'text', new_text_saved, context)
     if new_author != str(quote.author):
-        update_quote(quote.text_tok, 'author', new_author)
+        update_quote(quote.text_tok, 'author', new_author, context)
     if new_title != str(quote.title):
-        update_quote(quote.text_tok, 'title', new_title)
-    if add_note != str(quote.vo):
+        update_quote(quote.text_tok, 'title', new_title, context)
+    if add_note != str(quote.note):
         new_note_saved = add_note.replace('\n','  /n/')
-        update_quote(quote.text_tok, 'vo', new_note_saved)
+        update_quote(quote.text_tok, 'vo', new_note_saved, context)
 
 def dump_raw(raw_data):
     # import pickle

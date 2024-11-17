@@ -15,6 +15,17 @@ WITH events AS(
     FROM `prevert.v1.events`
 ),
 
+app_created AS(
+    SELECT
+        timestamp,
+        text_tok,
+        create_title as new_title,
+        create_author as new_author,
+        text_tok, as text,
+        create_note
+
+        "app" as source
+),
 
 update_title AS(
     SELECT
@@ -110,7 +121,6 @@ SELECT
         COALESCE(update_title.new_title, r.title) as title,
         COALESCE(update_author.new_author, r.author) as author,
         COALESCE(update_text.new_text, r.text) as text,
-        COALESCE(update_vo.new_vo, r.vo) as vo,
         r.book,
         r.source,
         r.confiance,
@@ -121,7 +131,7 @@ SELECT
     
     STRUCT(
         COALESCE(update_react.new_quote_react, r.quote_react) as quote_react,
-        update_note.new_note as note
+        COALESCE(update_note.new_note, r.vo) as note
     ) AS extra, -- extra info added by user
     
     STRUCT(

@@ -1,3 +1,3 @@
-timestamp,text_tok,source,action,field,new_value,create_title,create_author,create_text,create_vo
-2021-11-17 00:00:00,on ne desire pas les choses parce qu elles sont belles mais c est parce qu on les desire qu elles sont belles,local,update,title,Spinoza,Null,Null,Null,Null
-2021-11-17 00:00:00,Scooby-Doo,local,create,Null,Null,Scooby-Doo,Scooby-Doo,Scooby-Doo-be-doo,Scooby-Doo-hou-hou
+timestamp,text_tok,source,action,field,new_value,create_title,create_author,create_note
+2021-11-17 00:00:00,on ne desire pas les choses parce qu elles sont belles mais c est parce qu on les desire qu elles sont belles,local,update,title,Spinoza,Null,Null,Null
+2021-11-17 00:00:00,Scooby-Doo,local,create,Null,Null,Scooby-Doo,Scooby-Doo,Scooby-Doo-be-doo

@@ -10,8 +10,7 @@ WITH events AS(
         -- if action = "create"
         create_title,
         create_author,
-        create_text,
-        create_vo,
+        create_note,
     FROM `prevert.v1.events`
 ),
 
@@ -104,8 +103,9 @@ raw_data AS(
         IF(vo = "nan", Null, vo) as vo,
         * except(title,vo),
     from `prevert.v1.raw_data_parquet_sample_30` -- raw data from the 17th of November 2024
-)
-    
+),
+
+final AS(    
 SELECT
     r.timestamp,
     GREATEST(r.timestamp,
@@ -151,3 +151,9 @@ left join update_note on r.text_tok = update_note.text_tok
 left join update_author on r.text_tok = update_author.text_tok
 left join update_text on r.text_tok = update_text.text_tok
 where update_delete.is_delete is null -- remove the deleted events
+)
+
+select 
+* 
+from final
+where updated_timestamp > "2024-11-17 10:00:00"

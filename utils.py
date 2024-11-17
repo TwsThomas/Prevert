@@ -60,17 +60,20 @@ def get_stats(ddata, raw_data):
 
 
 def bq_insert_event(text_tok, action, column=None, new_value=None,title=None,author=None,note=None, context=None):
-    credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"])
-    st.toast(f'Edit {column} \n\n  {new_value}')
-    query = f"""INSERT INTO `prevert.v1.events` 
-    (timestamp,text_tok,source,action,field,new_value,create_title,create_author,create_note) 
-    VALUES 
-    (CURRENT_timestamp(), "{text_tok}", "{env}", "{action}", "{column}", "{new_value}", "{title}", "{author}", "{note}")
-    """
-    st.toast(query)
-    st.write(query)
-    pd.read_gbq(query, credentials=credentials)
-
+    try:
+        credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"])
+        query = f"""INSERT INTO `prevert.v1.events` 
+        (timestamp,text_tok,source,action,field,new_value,create_title,create_author,create_note) 
+        VALUES 
+        (CURRENT_timestamp(), "{text_tok}", "{context}", "{action}", "{column}", "{new_value}", "{title}", "{author}", "{note}")
+        """
+        pd.read_gbq(query, credentials=credentials)
+    except Exception as e:
+        print('unable to insert event', e,  e.__class__.__name__, e.__class__,)
+        st.write('unable to insert event', e,  e.__class__.__name__, e.__class__,)
+        st.toast('e.__class__')
+        print(query)
+        st.write(query)
 
 def delete_quote(text_tok, context):
     bq_insert_event(text_tok, action = "delete", context=context)
@@ -86,7 +89,6 @@ def add_react(text_tok, icon, context):
 
 def remove_react(text_tok, context):
     st.toast(f'☢️ Reactions removed not implemented yet ☢️ ')
-
 
 @st.dialog("Edit quote")
 def updating(quote, context):

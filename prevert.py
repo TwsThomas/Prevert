@@ -21,16 +21,14 @@ np.set_printoptions(precision=0)
 st.set_page_config(page_title= "Prevert", page_icon = "🦋", # "🎶🧞"
                     layout="wide", # centered, wide
                 )
-env = "web"
-context = "no-local"
+context = "web"
 try:
     if "localhost" in st.context.headers["Host"]:
-        env = "localhost"
         context = "localhost"
 except:
     pass
 
-st.title("🦋 🦎 🎶 🔥 🐉 🧞 " + ("🍄" if env == "localhost" else "⛩️") +" 🌈 🌚 ")
+st.title("🦋 🦎 🎶 🔥 🐉 🧞 " + ("🍄" if context == "localhost" else "⛩️") +" 🌈 🌚 ")
 all_emoji = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☢️⛩️🌚꩜🐘" + "𝄞☯︎☣☘︎꩜⛩❄⚝☠𓆝⚕️⚛♫𓆈𓆉𓆏𓆸𓃰𓃥𓆝"
 
 search_query = st_keyup(label = "Enter a value", key="uuid_keyup",

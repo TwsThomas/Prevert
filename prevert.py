@@ -116,12 +116,20 @@ if "*" in search_query:
 if "stats" in search_query:
     get_stats(raw_data, raw_data)
     st.stop()
-if "author;quote;" in search_query:
-    author = "Bibi"
-    text = "Exceptionnal"
+# "author;quote;" in search_query
+if ";;" == search_query[-2:]:
+    pp = search_query[:-2].split(";")
+    author = "Inconnu"
+    if len(pp) == 1:
+        text = pp[0]
+    if len(pp) == 2:
+        text, author = pp[0].strip(), pp[1].strip()
+        if len(author) > len(text):
+            text, author = author, text
+
     st.write("Création d'une nouvelle citation : ")
-    st.write(f":rainbow[{author}")
-    st.write(f":orange[{text}]")
+    bq_insert_event(text, "create", column=None, new_value=None,title=None,author=author, note=None, context=context)
+    st.write({"texte": text, "Auteur": author})
     st.stop()
 if "help" in search_query:
     help()

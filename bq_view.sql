@@ -2,7 +2,7 @@ WITH events AS(
     SELECT
         timestamp,
         text_tok,
-        source, -- ["web", "dev"]
+        source, -- ["localhost", "web"]
         action, -- ["create", "update", "delete"]
         -- if action = "update"
         field,
@@ -14,16 +14,37 @@ WITH events AS(
     FROM `prevert.v1.events`
 ),
 
-app_created AS(
+update_create AS(
     SELECT
         timestamp,
-        text_tok,
-        create_title as new_title,
-        create_author as new_author,
-        text_tok, as text,
-        create_note
+        timestamp as updated_timestamp,
+        STRUCT(
+            create_title as title,
+            create_author as author,
+            text_tok as text,
+            CAST(Null as string) as book,
+            source,
+            CAST(Null as float64) as confiance,
+            CAST(Null as float64) as nb_like,
+            CAST(Null as float64) as page,
+            CAST(Null as string) as url
+        ) AS quote, -- everything we'd scrapped
+        
+        STRUCT(
+            "𝄞" as quote_react,
+            cast(Null as string) as note
+        ) AS extra, -- extra info added by user
+        
+        STRUCT(
+            text_tok as text_tok,
+            CAST(Null as int) as nb_char,
+            CAST(Null as int) as nb_lines,
+            cast(null as boolean) as haiku,
+            cast(null as boolean) as sonnet
+        ) AS info, -- info post computed on local
 
-        "app" as source
+    FROM events
+    WHERE action = "create"
 ),
 
 update_title AS(
@@ -102,20 +123,21 @@ raw_data AS(
         IF(title = "nan", Null, title) as title,
         IF(vo = "nan", Null, vo) as vo,
         * except(title,vo),
-    from `prevert.v1.raw_data_parquet_sample_30` -- raw data from the 17th of November 2024
+    from `prevert.v1.raw_data_parquet_17_nov` -- raw data from the 17th of November 2024
 ),
 
 final AS(    
 SELECT
     r.timestamp,
-    GREATEST(r.timestamp,
-    update_title.updated_timestamp,
-    update_author.updated_timestamp,
-    update_text.updated_timestamp,
-    update_vo.updated_timestamp,
-    update_react.updated_timestamp,
-    update_note.updated_timestamp,
-    update_delete.updated_timestamp) as updated_timestamp,
+    GREATEST(
+    COALESCE(r.timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_title.updated_timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_author.updated_timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_text.updated_timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_vo.updated_timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_react.updated_timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_note.updated_timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_delete.updated_timestamp, "2024-11-17 00:00:00")) as updated_timestamp,
 
     STRUCT(
         COALESCE(update_title.new_title, r.title) as title,
@@ -153,7 +175,7 @@ left join update_text on r.text_tok = update_text.text_tok
 where update_delete.is_delete is null -- remove the deleted events
 )
 
-select 
-* 
-from final
+select * from final
 where updated_timestamp > "2024-11-17 10:00:00"
+union all 
+select * from update_create

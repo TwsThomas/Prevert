@@ -38,11 +38,16 @@ def clear_cache():
 @st.dialog("Raccourcis dans la barre de recherche")
 def help():
     st.write('🦋🦎🎶🔥🐉🧞🍄🌈🌚⛩️')
+    st.write(' :rainbow[citation] :red[; ;]  Ajoute la citation')
+    st.write(" :orange[auteur] ; :rainbow[citation] :red[; ;]   Ajoute la citation avec l'auteur")
+
     st.write('*?* : Classement aléatoire')
     st.write('*+* : Top 100')
     st.write('_*_ : Tout')
-    st.write(' _stats_: Statistiques')
-    st.write(' _Auteur;citation;_: Ajoute la citation (todo)')
+    st.write(' _stats_ : Statistiques')
+    st.write(' -- debug')
+    st.write(' _get_context_ : get_context (localhost vs web)')
+    st.write(' _batch_bq_ : Send the update-batch to BQ')
 
 
 # @st.dialog("Stats")
@@ -77,7 +82,7 @@ def bq_insert_event(text_tok, action, column=None, new_value=None,title=None,aut
     except Exception as e:
         print('unable to insert event', e,  e.__class__.__name__, e.__class__,)
         st.write('unable to insert event', e,  e.__class__.__name__, e.__class__,)
-        st.toast('e.__class__')
+        st.toast(e.__class__.__name__)
 
 def delete_quote(text_tok, context):
     bq_insert_event(text_tok, action = "delete", context=context)

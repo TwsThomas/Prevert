@@ -35,7 +35,7 @@ try:
 except Exception as e:
     st.toast(e)
 
-st.title("🦋 🦎 🎶 🔥 🐉 🧞 " + ("🍄" if context == "localhost" else "⛩️") +" 🌈 🌚 ")
+st.title("🦋 🦎 🎶 🔥 🐉 🧞 " + (("🍄" if context == "localhost" else "⛩️") +" 🌈 🌚 ") if context not in ['android', "iphone"] else "")
 all_emoji = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☢️⛩️🌚꩜🐘" + "𝄞☯︎☣☘︎꩜⛩❄⚝☠𓆝⚕️⚛♫𓆈𓆉𓆏𓆸𓃰𓃥𓆝"
 
 search_query = st_keyup(label = "Enter a value", key="uuid_keyup",

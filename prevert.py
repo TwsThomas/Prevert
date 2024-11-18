@@ -41,7 +41,7 @@ else:
     st.title("🦋 🦎 🎶 🔥 🐉 🧞 " + ("🍄" if context == "localhost" else "⛩️") +" 🌈 🌚 ")
 all_emoji = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☢️⛩️🌚꩜🐘" + "𝄞☯︎☣☘︎꩜⛩❄⚝☠𓆝⚕️⚛♫𓆈𓆉𓆏𓆸𓃰𓃥𓆝"
 
-init_search = st.query_params.get("search", "")
+init_search = st.query_params.get("search", "").replace('_', ' ')
 search_query = st_keyup(label = "Enter a value", key="uuid_keyup",
                          label_visibility="collapsed", debounce=400,
                          value = init_search)

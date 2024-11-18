@@ -99,6 +99,14 @@ def add_react(text_tok, icon, context):
 def remove_react(text_tok, context):
     st.toast(f'☢️ Reactions removed not implemented yet ☢️ ')
 
+def copyclip(quote, context):
+    st.code(f"https://twsthomas.streamlit.app/?search={quote.author} {quote.text_tok[:20]}".replace(' ', "_"), language="python")
+    try:
+        import pyperclip
+        pyperclip.copy(f"https://twsthomas.streamlit.app/?search={quote.author} {quote.text_tok[:20]}".replace(' ', "_"))
+    except:
+        pass
+
 @st.dialog("Edit quote")
 def updating(quote, context):
     
@@ -110,8 +118,8 @@ def updating(quote, context):
     for i, icon in enumerate(lala):
         with le_col[i]:
             if icon == "🔗":
-                st.code(f"https://twsthomas.streamlit.app/?search={quote.author} {quote.text_tok[:20]}", language="python")
-                # pyperclip.copy(f"https://twsthomas.streamlit.app/?search={quote.author} {quote.text_tok[:20]}")
+                st.button(icon, key = get_rnd_key(), 
+                      on_click = copyclip, args = [quote, context]) 
             else:
                 st.button(icon, key = get_rnd_key(), 
                       on_click = add_react, args = [quote.text_tok, icon, context]) 

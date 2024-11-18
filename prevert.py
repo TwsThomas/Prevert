@@ -35,16 +35,20 @@ try:
 except Exception as e:
     st.toast(e)
 
-st.title("🦋 🦎 🎶 🔥 🐉 🧞 " + (("🍄" if context == "localhost" else "⛩️") +" 🌈 🌚 ") if context not in ['android', "iphone"] else "")
+if context == "android":
+    st.title("🦋 🦎 🎶 🐉 🍄 🌈 🌚 ")
+else:
+    st.title("🦋 🦎 🎶 🔥 🐉 🧞 " + ("🍄" if context == "localhost" else "⛩️") +" 🌈 🌚 ")
 all_emoji = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☢️⛩️🌚꩜🐘" + "𝄞☯︎☣☘︎꩜⛩❄⚝☠𓆝⚕️⚛♫𓆈𓆉𓆏𓆸𓃰𓃥𓆝"
 
 search_query = st_keyup(label = "Enter a value", key="uuid_keyup",
                          label_visibility="collapsed", debounce=400)
 
 if context == "android":
-    st.toggle("Hello", value = False)
-    st.button("Yo")
-    st.button("Pla")
+    pass
+    # st.toggle("Hello", value = False)
+    # st.button("Yo")
+    # st.button("Pla")
 
 ### load data
 data = load_data()

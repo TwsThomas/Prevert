@@ -41,8 +41,10 @@ else:
     st.title("🦋 🦎 🎶 🔥 🐉 🧞 " + ("🍄" if context == "localhost" else "⛩️") +" 🌈 🌚 ")
 all_emoji = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☢️⛩️🌚꩜🐘" + "𝄞☯︎☣☘︎꩜⛩❄⚝☠𓆝⚕️⚛♫𓆈𓆉𓆏𓆸𓃰𓃥𓆝"
 
+init_search = st.query_params.get("search", "")
 search_query = st_keyup(label = "Enter a value", key="uuid_keyup",
-                         label_visibility="collapsed", debounce=400)
+                         label_visibility="collapsed", debounce=400,
+                         value = init_search)
 
 if context == "android":
     pass
@@ -155,6 +157,7 @@ if "get_context" in search_query:
     with open('batch_query_value.txt', 'r') as f:
             query_values = f.read()[:-1]
     st.write("context: " + context)
+    st.write(st.query_params)
     st.write(st.context.headers)
     st.stop()
 if "re-dump BQ" in search_query:
@@ -179,10 +182,7 @@ if "batch_bq" in search_query:
         st.toast(e.__class__)
         st.stop()
     st.stop()
-
-# TODO: if "author;text;" in search_query:
-#     create_quote(author, text)
-if "dumpraw" in search_query:
+if "dump_raw" in search_query:
     st.toast(f'wanna \n {len(raw_data)} sss')
     dump_raw(raw_data)
 

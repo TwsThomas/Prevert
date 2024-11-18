@@ -4,8 +4,7 @@
 - Eluard
 - more haikus
 
-- create quote.
-- share with url and paragraph within
+- share with url and paragraph within st.query_params
 - search into full books
 - tags (gpt + search / dataframe)
 - pip install streamlit-shortcuts

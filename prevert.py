@@ -23,14 +23,15 @@ context = "unknow"
 try:
     if "localhost" in st.context.headers["Host"]:
         context = "localhost"
-    elif "android" in st.context.headers["User-Agent"].lower():
-        context = "android"
-    elif "iphone" in st.context.headers["User-Agent"].lower():
-        context = "iphone"
-    elif "Mac OS X" in st.context.headers["User-Agent"]:
-        context = "mac"
-    if st.context.headers.get("X-Streamlit-User", "none") != "eyJlbWFpbCI6InR3c3Rob21hc0BnbWFpbC5jb20iLCJpc1B1YmxpY0Nsb3VkQXBwIjpmYWxzZX0=":
-        context += '?'
+    else:
+        if "android" in st.context.headers["User-Agent"].lower():
+            context = "android"
+        if "iphone" in st.context.headers["User-Agent"].lower():
+            context = "iphone"
+        if "Mac OS X" in st.context.headers["User-Agent"]:
+            context = "mac"
+        if st.context.headers.get("X-Streamlit-User", "none") not in ["eyJlbWFpbCI6IiIsImlzUHVibGljQ2xvdWRBcHAiOnRydWV9", "eyJlbWFpbCI6InR3c3Rob21hc0BnbWFpbC5jb20iLCJpc1B1YmxpY0Nsb3VkQXBwIjpmYWxzZX0="]:
+            context += '?'
 except Exception as e:
     st.toast(e)
 

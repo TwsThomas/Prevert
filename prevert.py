@@ -19,10 +19,18 @@ np.set_printoptions(precision=0)
 st.set_page_config(page_title= "Prevert", page_icon = "🦋", # "🎶🧞"
                     layout="wide", # centered, wide
                 )
-context = "web"
+context = "unknow"
 try:
     if "localhost" in st.context.headers["Host"]:
         context = "localhost"
+    if "android" in st.context.headers["User-Agent"].lower():
+        context = "android"
+    if "iphone" in st.context.headers["User-Agent"].lower():
+        context = "iphone"
+    if "Mac OS X" in st.context.headers["User-Agent"].lower():
+        context = "mac"
+    if st.context.headers["X-Streamlit-User"] != "eyJlbWFpbCI6InR3c3Rob21hc0BnbWFpbC5jb20iLCJpc1B1YmxpY0Nsb3VkQXBwIjpmYWxzZX0=":
+        context += '?'
 except:
     pass
 
@@ -116,7 +124,7 @@ if "*" in search_query:
 if "stats" in search_query:
     get_stats(raw_data, raw_data)
     st.stop()
-# "author;quote;" in search_query
+# "quote;author;;" in search_query
 if ";;" == search_query[-2:]:
     pp = search_query[:-2].split(";")
     author = "Inconnu"
@@ -136,7 +144,7 @@ if "help" in search_query:
 if "get_context" in search_query:
     with open('batch_query_value.txt', 'r') as f:
             query_values = f.read()[:-1]
-    st.write(bq_insert_query_intro + query_values)
+    st.write("context: " + context)
     st.write(st.context.headers)
     st.stop()
 if "re-dump BQ" in search_query:

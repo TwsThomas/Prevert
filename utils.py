@@ -105,11 +105,15 @@ def updating(quote, context):
     if context == "android":
         lala = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☯︎"
     else:
-        lala = "🍄🐘🌚🧞⛩️" + ("🌈" if quote.haiku else "")
+        lala = "🍄🐘🌚🧞⛩️" + ("🌈" if quote.haiku else "") + "🔗"
     le_col = st.columns([1]*(len(lala)) + [5], vertical_alignment = "center")
     for i, icon in enumerate(lala):
         with le_col[i]:
-            st.button(icon, key = get_rnd_key(), 
+            if icon == "🔗":
+                st.code(f"https://twsthomas.streamlit.app/?search={quote.author} {quote.text_tok[:20]}", language="python")
+                # pyperclip.copy(f"https://twsthomas.streamlit.app/?search={quote.author} {quote.text_tok[:20]}")
+            else:
+                st.button(icon, key = get_rnd_key(), 
                       on_click = add_react, args = [quote.text_tok, icon, context]) 
             
     new_title = quote.title

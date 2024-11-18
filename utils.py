@@ -102,7 +102,10 @@ def remove_react(text_tok, context):
 @st.dialog("Edit quote")
 def updating(quote, context):
     
-    lala = "🍄🐘🌚🧞⛩️" + ("🌈" if quote.haiku else "")
+    if context == "android":
+        lala = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☯︎"
+    else:
+        lala = "🍄🐘🌚🧞⛩️" + ("🌈" if quote.haiku else "")
     le_col = st.columns([1]*(len(lala)) + [5], vertical_alignment = "center")
     for i, icon in enumerate(lala):
         with le_col[i]:
@@ -115,8 +118,8 @@ def updating(quote, context):
     new_title = st.text_input("Titre", quote.title)
     new_text = st.text_area("Citation", value = quote.text)
     new_author = st.text_input("Auteur", value = quote.author)
-    kill_react = st.button("Retirer les réactions ☢️", key = get_rnd_key(),
-                           on_click=remove_react, args=[quote.text_tok,context])
+    # kill_react = st.button("Retirer les réactions ☢️", key = get_rnd_key(),
+    #                        on_click=remove_react, args=[quote.text_tok,context])
     # add_note = st.text_area("Notes", value = quote.vo)
 
     if new_text != str(quote.text):

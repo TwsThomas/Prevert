@@ -36,7 +36,7 @@ except Exception as e:
     st.toast(e)
 
 if context == "android":
-    st.title("🦋 🦎 🎶 🌈 🌚 ")
+    st.title("🦋 🦎 🍄 🎶 🌈 🌚 ")
 else:
     st.title("🦋 🦎 🎶 🔥 🐉 🧞 " + ("🍄" if context == "localhost" else "⛩️") +" 🌈 🌚 ")
 all_emoji = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☢️⛩️🌚꩜🐘" + "𝄞☯︎☣☘︎꩜⛩❄⚝☠𓆝⚕️⚛♫𓆈𓆉𓆏𓆸𓃰𓃥𓆝"
@@ -256,9 +256,11 @@ for i, quote in enumerate(display_data.itertuples()):
 
         if show_action_buttons:
             if quote.haiku:
-                l_dispo = ["🦋"] if context == "android" else "🦎,🦋,🎶,🔥,꩜".split(",")
+                l_dispo = "🦎,🦋,🎶,🔥,꩜".split(",")
             else:
-                l_dispo = ["🦋"] if context == "android" else "🦎,🌈,🦋,🎶,🔥,🐉".split(",")
+                l_dispo = "🦎,🌈,🦋,🎶,🔥,🐉".split(",")
+            if context == "android":
+                l_dispo = []
             list_col_button = st.columns([6,] + [1] * (len(l_dispo)) + [1,1,1])
             with list_col_button[0]:
                 st.write(f":grey[{info}]")
@@ -272,7 +274,8 @@ for i, quote in enumerate(display_data.itertuples()):
                 st.button("✏", key = get_rnd_key(),
                             help = "Éditer la citation", on_click = updating, args = [quote, context])
             with list_col_button[-2]:
-                st.button(f':grey[⨂]',
+                if context != "android":
+                    st.button(f':grey[⨂]',
                                key = get_rnd_key(),
                                help = "Supprimer la citation", on_click = delete_quote,
                                 args = [quote.text_tok, context])

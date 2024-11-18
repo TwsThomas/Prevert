@@ -29,10 +29,10 @@ try:
         context = "iphone"
     if "Mac OS X" in st.context.headers["User-Agent"].lower():
         context = "mac"
-    if st.context.headers["X-Streamlit-User"] != "eyJlbWFpbCI6InR3c3Rob21hc0BnbWFpbC5jb20iLCJpc1B1YmxpY0Nsb3VkQXBwIjpmYWxzZX0=":
+    if st.context.headers.get("X-Streamlit-User", "none") != "eyJlbWFpbCI6InR3c3Rob21hc0BnbWFpbC5jb20iLCJpc1B1YmxpY0Nsb3VkQXBwIjpmYWxzZX0=":
         context += '?'
-except:
-    pass
+except Exception as e:
+    st.toast(e)
 
 st.title("🦋 🦎 🎶 🔥 🐉 🧞 " + ("🍄" if context == "localhost" else "⛩️") +" 🌈 🌚 ")
 all_emoji = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☢️⛩️🌚꩜🐘" + "𝄞☯︎☣☘︎꩜⛩❄⚝☠𓆝⚕️⚛♫𓆈𓆉𓆏𓆸𓃰𓃥𓆝"

@@ -99,11 +99,15 @@ def add_react(text_tok, icon, context):
 def remove_react(text_tok, context):
     st.toast(f'☢️ Reactions removed not implemented yet ☢️ ')
 
+def get_hyperlink(quote, context):
+    return f"https://twsthomas.streamlit.app/?search={quote.author} {' '.join([w for w in quote.text_tok.split(' ') if len(w) > 2][:5])}".replace(' ', "_")
+
 def copyclip(quote, context):
-    st.code(f"https://twsthomas.streamlit.app/?search={quote.author} {quote.text_tok.split(' ')[:5]}".replace(' ', "_"), language="python")
+    st.code(get_hyperlink(quote, context), language="python")
     try:
         import pyperclip
-        pyperclip.copy(f"https://twsthomas.streamlit.app/?search={quote.author} {quote.text_tok.split(' ')[:5]}".replace(' ', "_"))
+        pyperclip.copy(get_hyperlink(quote, context))
+        st.toast("🔗 Copied to clipboard")
     except:
         pass
 
@@ -130,6 +134,7 @@ def updating(quote, context):
     new_title = st.text_input("Titre", quote.title)
     new_text = st.text_area("Citation", value = quote.text)
     new_author = st.text_input("Auteur", value = quote.author)
+    st.code(get_hyperlink(quote, context), language="python")
     # kill_react = st.button("Retirer les réactions ☢️", key = get_rnd_key(),
     #                        on_click=remove_react, args=[quote.text_tok,context])
     # add_note = st.text_area("Notes", value = quote.vo)

@@ -1,6 +1,6 @@
 
 @st.cache_data
-def load_data_v1():
+def load_data_v0():
     l_data = []
     for datafile in ['interactions/saved_best', 'data/babelio_data', 'data/eclair_data', 'data/haiku_kerouac', 'data/manual author_data']:
         try:
@@ -108,3 +108,15 @@ def save_quote(q, icon, toast = True):
     with open("interactions/quote_react.txt", "a") as f:
         # st.toast(":orange[NOT SAVED]")
         f.write(f"{icon}{q}\n")
+
+
+
+
+@st.cache_data
+def load_data():
+    data_v1 = pd.read_parquet('data_v2/raw_data_v1_17_nov_.parquet')
+    data_v1['text'] = data_v1['text'].astype(str)
+    data_v1.set_index('text_tok', inplace = True, drop = False)
+    data_v1.sort_values('nb_like', ascending = False, inplace = True)
+    data_v1['all_search'] = (data_v1['text_tok'].astype(str)) + (data_v1['text'].astype(str)) + (data_v1['author'].astype(str).apply(tokenize)) + (data_v1['book'].astype(str).apply(tokenize)) + (data_v1['title'].astype(str).apply(tokenize)) + data_v1['quote_react'].astype(str)
+    return data_v1

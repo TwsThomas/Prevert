@@ -76,7 +76,7 @@ with list_col_ui[2]:
 # with list_col_ui[-4]:
 #     st.button("dump_raw", key = get_rnd_key(), on_click = dump_raw, args = [raw_data])
 with list_col_ui[-1]:
-    st.button("Help", key = get_rnd_key(), on_click = help)
+    st.button("Help", key = get_rnd_key(), on_click = help, args=[context])
 # with list_col_ui[-2]:
 #     st.button("BQ get", key = get_rnd_key(), on_click = read_bq, args = [search_query]) # "SELECT * from `prevert.v1.sample` limit 10"
 # with list_col_ui[-1]:
@@ -152,7 +152,9 @@ if ";;" == search_query[-2:]:
     st.write({"texte": text, "Auteur": author})
     st.stop()
 if "help" in search_query:
-    help()
+    help(context)
+
+# local functions
 if "get_context" in search_query:
     with open('batch_query_value.txt', 'r') as f:
             query_values = f.read()[:-1]
@@ -160,31 +162,37 @@ if "get_context" in search_query:
     st.write(st.query_params)
     st.write(st.context.headers)
     st.stop()
-if "re-dump BQ" in search_query:
-    """ Download the data from BigQuery (with compiled events) 
-    and save it as a parquet file for app loading in web mode """
-    pass
-if "batch_bq" in search_query:
-    """ Insert into bq.events all batch_query_value.txt """
+
+if "bq_update" in search_query:
+    st.write('run bq_update_data()')
+    bq_update_data()
+    st.write('Done')
+    st.toast('Done !')
+    st.stop()
+if "bq_run" in search_query or "bq_sync" in search_query or "bq_batch" in search_query:
+    """ Insert into bq.events all batch_query_value.txt then update data """
     try:
         with open('batch_query_value.txt', 'r') as f:
             query_values = f.read()[:-2] # remove last comma
-            credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"])
             pd.read_gbq(bq_insert_query_intro + query_values, credentials=credentials)
             st.toast("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
             st.write("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
         with open('batch_query_value.txt', 'w') as f:
             f.write("")
-
     except Exception as e:
         print('unable to insert event', e,  e.__class__.__name__, e.__class__,)
-        st.write('unable to insert event', e,  e.__class__.__name__, e.__class__,)
+        st.write('/!!\ Unable to insert event', e,  e.__class__.__name__, e.__class__,)
         st.toast(e.__class__)
         st.stop()
+    st.write('run bq_update_data()')
+    bq_update_data()
+    st.write('Done')
+    st.toast('Done !')
     st.stop()
-if "dump_raw" in search_query:
-    st.toast(f'wanna \n {len(raw_data)} sss')
-    dump_raw(raw_data)
+
+# if "dump_raw" in search_query:
+#     st.toast(f'wanna \n {len(raw_data)} sss')
+#     dump_raw(raw_data)
 
 
 ### Display data
@@ -192,11 +200,12 @@ if current_data is None or len(current_data) == 0:
     st.write("No data found")
     st.stop()
 if search_query == "":
-    display_data = current_data[:500].sample(n = min([len(current_data), 20]), replace=False)
+    display_data = current_data[:500].sample(n = min([len(current_data), 20]), replace=False, random_state=0)
 
 list_col = st.columns(nb_columns)
 for i, quote in enumerate(display_data.itertuples()):
-    current_expand = quote.nb_lines < 7 and len(quote.text) < 900
+    text_tok = quote[0]
+    current_expand = len(quote.text.split('\n')) < 7 and len(quote.text) < 900
     like_str = f'{int(np.round(quote.nb_like, 0))}' if (str(quote.nb_like) not in ['nan', '0', '0.0', '0.', 'None']) else ""
     title_str = f"{quote.title if (str(quote.title) != 'nan' and len(str(quote.title)) > 1) else ''}" 
     
@@ -269,7 +278,7 @@ for i, quote in enumerate(display_data.itertuples()):
                     ans = st.button(icon,
                         key = get_rnd_key(),
                         on_click = add_react,
-                        args = [quote.text_tok, icon, context]) 
+                        args = [text_tok, icon, context]) 
             with list_col_button[-3]:
                 st.button("✏", key = get_rnd_key(),
                             help = "Éditer la citation", on_click = updating, args = [quote, context])
@@ -278,8 +287,8 @@ for i, quote in enumerate(display_data.itertuples()):
                     st.button(f':grey[⨂]',
                                key = get_rnd_key(),
                                help = "Supprimer la citation", on_click = delete_quote,
-                                args = [quote.text_tok, context])
-        
+                                args = [text_tok, context])
+
 if len(display_data) == 30:
     if st.button("Load more", key = get_rnd_key()):
         search_query += "+"

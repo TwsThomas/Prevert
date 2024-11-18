@@ -4,9 +4,11 @@ import numpy as np
 from unidecode import unidecode
 from scrap_utils import tokenize
 
-from google.oauth2 import service_account
-
 import streamlit as st
+
+from google.oauth2 import service_account
+credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"])
+
 
 bq_insert_query_intro = f"""INSERT INTO `prevert.v1.events` 
 (timestamp,text_tok,source,action,field,new_value,create_title,create_author,create_note) 
@@ -15,12 +17,10 @@ VALUES
 
 @st.cache_data
 def load_data():
-    data_v1 = pd.read_parquet('data_v2/raw_data_v1_17_nov.parquet')
-    data_v1['text'] = data_v1['text'].astype(str)
-    data_v1.set_index('text_tok', inplace = True, drop = False)
-    data_v1.sort_values('nb_like', ascending = False, inplace = True)
-    data_v1['all_search'] = (data_v1['text_tok'].astype(str)) + (data_v1['text'].astype(str)) + (data_v1['author'].astype(str).apply(tokenize)) + (data_v1['book'].astype(str).apply(tokenize)) + (data_v1['title'].astype(str).apply(tokenize)) + data_v1['quote_react'].astype(str)
-    return data_v1
+    data_ram = pd.read_parquet('data_v2/raw_data_v1_17_nov_.parquet')
+    data_ram.set_index('text_tok', inplace = True, drop = True)
+    data_ram['all_search'] = (data_ram.index.astype(str)) + (data_ram['author'].astype(str).apply(tokenize)) + (data_ram['book'].astype(str).apply(tokenize)) + (data_ram['title'].astype(str).apply(tokenize)) + data_ram['quote_react'].astype(str)
+    return data_ram
 
 def get_rnd_key():
     return str(np.random.randint(1000000000))
@@ -36,18 +36,22 @@ def clear_cache():
     st.toast("Cache cleared")
 
 @st.dialog("Raccourcis dans la barre de recherche")
-def help():
+def help(context):
     st.write('🦋🦎🎶🔥🐉🧞🍄🌈🌚⛩️')
-    st.write(' :rainbow[citation] :red[; ;]  Ajoute la citation')
-    st.write(" :orange[auteur] ; :rainbow[citation] :red[; ;]   Ajoute la citation avec l'auteur")
+    st.write(' :rainbow[citation] :red[; ;]  :grey[Ajoute la citation]')
+    st.write(" :orange[auteur] ; :rainbow[citation] :red[; ;]   :grey[Ajoute la citation avec l'auteur]")
 
-    st.write('*?* : Classement aléatoire')
-    st.write('*+* : Top 100')
-    st.write('_*_ : Tout')
-    st.write(' _stats_ : Statistiques')
-    st.write(' -- debug')
-    st.write(' _get_context_ : get_context (localhost vs web)')
-    st.write(' _batch_bq_ : Send the update-batch to BQ')
+    st.write(':blue[?] : :grey[Classement aléatoire]')
+    st.write(':blue[+] : :grey[Top 100]')
+    st.write(':blue[*] : :grey[Tout]')
+    st.write(':blue[stats] : :grey[Statistiques]')
+
+    # st.write(' -- debug')
+    st.write(' :green[get_context] : :grey[get current context (localhost vs web)]')
+    if 'local' in context:
+        st.write(' :green[bq_update] : :grey[download events in BQ, conat and save in data_v2/data_ram.parquet]')
+        st.write(' :green[bq_batch] : :grey[Send the update-batch from csv to BQ then update data]')
+        st.write(' :green[bq_run] : :grey[Send the update-batch from csv to BQ then update data]')
 
 
 # @st.dialog("Stats")
@@ -101,7 +105,7 @@ def remove_react(text_tok, context):
     st.toast(f'☢️ Reactions removed not implemented yet ☢️ ')
 
 def get_hyperlink(quote, context):
-    return f"https://twsthomas.streamlit.app/?search={quote.author} {' '.join([w for w in quote.text_tok.split(' ') if len(w) > 2][:5])}".replace(' ', "_")
+    return f"https://twsthomas.streamlit.app/?search={quote.author} {' '.join([w for w in quote[0].split(' ') if len(w) > 2][:5])}".replace(' ', "_")
 
 def copyclip(quote, context):
     st.code(get_hyperlink(quote, context), language="python")
@@ -127,8 +131,8 @@ def updating(quote, context):
                       on_click = copyclip, args = [quote, context]) 
             else:
                 st.button(icon, key = get_rnd_key(), 
-                      on_click = add_react, args = [quote.text_tok, icon, context, toast = False]) 
-            
+                      on_click = add_react, args = [quote[0], icon, context, False]) 
+
     new_title = quote.title
     new_text = quote.text
     new_author = quote.author
@@ -137,19 +141,19 @@ def updating(quote, context):
     new_author = st.text_input("Auteur", value = quote.author)
     st.code(get_hyperlink(quote, context), language="python")
     # kill_react = st.button("Retirer les réactions ☢️", key = get_rnd_key(),
-    #                        on_click=remove_react, args=[quote.text_tok,context])
+    #                        on_click=remove_react, args=[quote[0],context])
     # add_note = st.text_area("Notes", value = quote.vo)
 
     if new_text != str(quote.text):
         new_text_saved = new_text.replace('\n','  /n/')
-        update_quote(quote.text_tok, 'text', new_text_saved, context)
+        update_quote(quote[0], 'text', new_text_saved, context)
     if new_author != str(quote.author):
-        update_quote(quote.text_tok, 'author', new_author, context)
+        update_quote(quote[0], 'author', new_author, context)
     if new_title != str(quote.title):
-        update_quote(quote.text_tok, 'title', new_title, context)
+        update_quote(quote[0], 'title', new_title, context)
     # if add_note != str(quote.note):
     #     new_note_saved = add_note.replace('\n','  /n/')
-    #     update_quote(quote.text_tok, 'vo', new_note_saved, context)
+    #     update_quote(quote[0], 'vo', new_note_saved, context)
 
 def dump_raw(raw_data):
     # import pickle
@@ -159,3 +163,64 @@ def dump_raw(raw_data):
     raw_data.head(900).to_parquet('data/raw_data_sample_900.parquet', index = False)
     st.toast(f'\n {len(raw_data)} parquet clean')
     st.write(f'\n {len(raw_data)} parquet clean')
+
+
+def bq_update_data():
+    """ load data_v1 from parquet
+    and events from BQ 
+    then update all data 
+    dump in data_v2/data_ram.parquet """
+
+    credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"])
+
+    # archive from data_v1 (i.e. all scrapping)
+    data_v1 = pd.read_parquet('data_v2/raw_data_v1_17_nov_.parquet') 
+    data_v1['note'] = data_v1['vo']
+    data_v1['all_search'] = (data_v1['text_tok'].astype(str)) + (data_v1['author'].astype(str).apply(tokenize)) + (data_v1['book'].astype(str).apply(tokenize)) + (data_v1['title'].astype(str).apply(tokenize)) + data_v1['quote_react'].astype(str)
+    data_v1.set_index('text_tok', inplace = True, drop = True)
+    data_v1.drop(['year', 'source', 'confiance', 'page', 'url', 'nb_char', 'nb_lines', 'sonnet', 'vo'], axis = 1, inplace = True)
+    data_v1['is_delete'] = False
+    st.write('data_v1 loaded')
+
+    # add events
+    with open('bq_view_updated.sql', 'r') as f:
+        query_view = f.read()
+    df_updated = pd.read_gbq(query_view, credentials=credentials)
+    st.write('events loaded')
+
+    df_updated['text'] = df_updated['quote'].apply(lambda x: x.get('text', ''))
+    df_updated['text_tok'] = df_updated['quote'].apply(lambda x: tokenize(x.get('text', '')))
+    df_updated['author'] = df_updated['quote'].apply(lambda x: x.get('author', ''))
+    df_updated['book'] = df_updated['quote'].apply(lambda x: x.get('book', ''))
+    df_updated['title'] = df_updated['quote'].apply(lambda x: x.get('title', ''))
+    df_updated['quote_react'] = df_updated['extra'].apply(lambda x: x.get('quote_react', ''))
+    df_updated['note'] = df_updated['extra'].apply(lambda x: x.get('note', ''))
+    df_updated['haiku'] = df_updated['text'].apply(lambda x: len(x.split('\n')) == 3)
+    df_updated['nb_like'] = 0
+    df_updated['all_search'] = (df_updated['text_tok'].astype(str)) + (df_updated['author'].astype(str).apply(tokenize)) + (df_updated['book'].astype(str).apply(tokenize)) + (df_updated['title'].astype(str).apply(tokenize)) + df_updated['quote_react'].astype(str)
+
+    df_updated = df_updated[['text', 'author', 'book', 'title', 'nb_like', 'text_tok', 'haiku', 'quote_react', 'note', 'all_search', 'is_delete']]
+    df_updated.set_index('text_tok', inplace = True, drop = True)
+
+    data_ram = pd.concat([df_updated, data_v1], axis = 0)
+    # drop duplicates index
+    data_ram = data_ram[~data_ram.index.duplicated(keep='first')]
+    data_ram.sort_values('nb_like', ascending = False, inplace = True)
+    data_ram.dropna(subset=['is_delete'], inplace = True)
+    data_ram = data_ram[data_ram['is_delete'] == False]
+    data_ram.drop(['is_delete', 'all_search'], axis = 1, inplace = True)
+    # data_ram.drop(['is_delete'], axis = 1, inplace = True)
+
+    data_ram['author'] = data_ram['author'].astype(str)
+    data_ram['book'] = data_ram['book'].astype(str).replace('None', None)
+    data_ram['title'] = data_ram['title'].astype(str).replace('nan', None)
+    data_ram['quote_react'] = data_ram['quote_react'].astype(str).replace('None', None)
+    data_ram['note'] = data_ram['note'].astype(str).replace('nan', None)
+    # data_ram['all_search'] = data_ram['all_search'].astype(str)
+    data_ram['text'] = data_ram['text'].astype(str)
+    data_ram['haiku'] = data_ram['haiku'].astype(bool)
+    data_ram['nb_like'] = data_ram['nb_like'].astype(int)
+
+    st.write('data_ram updated')
+    data_ram.to_parquet('data_v2/data_ram.parquet')
+    st.write('data_ram dumped')

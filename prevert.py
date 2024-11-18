@@ -23,11 +23,11 @@ context = "unknow"
 try:
     if "localhost" in st.context.headers["Host"]:
         context = "localhost"
-    if "android" in st.context.headers["User-Agent"].lower():
+    elif "android" in st.context.headers["User-Agent"].lower():
         context = "android"
-    if "iphone" in st.context.headers["User-Agent"].lower():
+    elif "iphone" in st.context.headers["User-Agent"].lower():
         context = "iphone"
-    if "Mac OS X" in st.context.headers["User-Agent"].lower():
+    elif "Mac OS X" in st.context.headers["User-Agent"]:
         context = "mac"
     if st.context.headers.get("X-Streamlit-User", "none") != "eyJlbWFpbCI6InR3c3Rob21hc0BnbWFpbC5jb20iLCJpc1B1YmxpY0Nsb3VkQXBwIjpmYWxzZX0=":
         context += '?'

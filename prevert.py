@@ -36,7 +36,7 @@ except Exception as e:
     st.toast(e)
 
 if context == "android":
-    st.title("🦋 🦎 🎶 🐉 🍄 🌈 🌚 ")
+    st.title("🦋 🦎 🎶 🌈 🌚 ")
 else:
     st.title("🦋 🦎 🎶 🔥 🐉 🧞 " + ("🍄" if context == "localhost" else "⛩️") +" 🌈 🌚 ")
 all_emoji = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☢️⛩️🌚꩜🐘" + "𝄞☯︎☣☘︎꩜⛩❄⚝☠𓆝⚕️⚛♫𓆈𓆉𓆏𓆸𓃰𓃥𓆝"
@@ -61,7 +61,7 @@ raw_data = copy(data)
 ### UI
 nb_columns = 2
 show_action_buttons = True
-n_max_author = 13
+n_max_author = 6 if context == "android" else 13 
 
 list_col_ui = st.columns([1]*8, vertical_alignment = "center")
 with list_col_ui[0]:    
@@ -256,9 +256,9 @@ for i, quote in enumerate(display_data.itertuples()):
 
         if show_action_buttons:
             if quote.haiku:
-                l_dispo = "🦎,🦋,🎶,🔥,꩜".split(",")
+                l_dispo = ["🦋"] if context == "android" else "🦎,🦋,🎶,🔥,꩜".split(",")
             else:
-                l_dispo = "🦎,🌈,🦋,🎶,🔥,🐉".split(",")
+                l_dispo = ["🦋"] if context == "android" else "🦎,🌈,🦋,🎶,🔥,🐉".split(",")
             list_col_button = st.columns([6,] + [1] * (len(l_dispo)) + [1,1,1])
             with list_col_button[0]:
                 st.write(f":grey[{info}]")

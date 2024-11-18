@@ -41,6 +41,11 @@ all_emoji = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☢️⛩️🌚꩜🐘" 
 search_query = st_keyup(label = "Enter a value", key="uuid_keyup",
                          label_visibility="collapsed", debounce=400)
 
+if context == "android":
+    st.toggle("Hello", value = False)
+    st.button("Yo")
+    st.button("Pla")
+
 ### load data
 data = load_data()
 raw_data = copy(data)

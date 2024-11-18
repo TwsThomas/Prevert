@@ -100,10 +100,10 @@ def remove_react(text_tok, context):
     st.toast(f'☢️ Reactions removed not implemented yet ☢️ ')
 
 def copyclip(quote, context):
-    st.code(f"https://twsthomas.streamlit.app/?search={quote.author} {quote.text_tok[:20]}".replace(' ', "_"), language="python")
+    st.code(f"https://twsthomas.streamlit.app/?search={quote.author} {quote.text_tok.split(' ')[:5]}".replace(' ', "_"), language="python")
     try:
         import pyperclip
-        pyperclip.copy(f"https://twsthomas.streamlit.app/?search={quote.author} {quote.text_tok[:20]}".replace(' ', "_"))
+        pyperclip.copy(f"https://twsthomas.streamlit.app/?search={quote.author} {quote.text_tok.split(' ')[:5]}".replace(' ', "_"))
     except:
         pass
 
@@ -111,7 +111,7 @@ def copyclip(quote, context):
 def updating(quote, context):
     
     if context == "android":
-        lala = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☯︎"
+        lala = "🦎🔥🦋🎶🐉🧞🍄🌈🌚🔗"
     else:
         lala = "🍄🐘🌚🧞⛩️" + ("🌈" if quote.haiku else "") + "🔗"
     le_col = st.columns([1]*(len(lala)) + [5], vertical_alignment = "center")

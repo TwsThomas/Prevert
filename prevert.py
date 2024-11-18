@@ -256,9 +256,9 @@ for i, quote in enumerate(display_data.itertuples()):
 
         if show_action_buttons:
             if quote.haiku:
-                l_dispo = "🦎,🦋,🎶,🔥,꩜".split(",")
+                l_dispo = "🦎,🦋,🎶,🔥,🌚".split(",")
             else:
-                l_dispo = "🦎,🌈,🦋,🎶,🔥,🐉".split(",")
+                l_dispo = "🦎,🌈,🦋,🎶,🔥,🐉,🌚".split(",")
             if context == "android":
                 l_dispo = []
             list_col_button = st.columns([6,] + [1] * (len(l_dispo)) + [1,1,1])

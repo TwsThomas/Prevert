@@ -92,9 +92,10 @@ def update_quote(text_tok, column, new_value, context):
     bq_insert_event(text_tok, action="update", column=column, new_value=new_value, context=context)
     st.toast(f'✏ Edited {column} \n\n  {new_value}')
 
-def add_react(text_tok, icon, context):
+def add_react(text_tok, icon, context, toast = True):
     bq_insert_event(text_tok, action="react", new_value=icon, context=context)
-    st.toast(icon)
+    if toast:
+        st.toast(icon)
 
 def remove_react(text_tok, context):
     st.toast(f'☢️ Reactions removed not implemented yet ☢️ ')
@@ -115,9 +116,9 @@ def copyclip(quote, context):
 def updating(quote, context):
     
     if context == "android":
-        lala = "🦎🔥🦋🎶🐉🧞🍄🌈🌚🔗"
+        lala = "🦎🔥🦋🎶🐉🧞🍄🌈"
     else:
-        lala = "🍄🐘🌚🧞⛩️" + ("🌈" if quote.haiku else "") + "🔗"
+        lala = "🍄🐘🧞⛩️" + ("🌈" if quote.haiku else "") + "🔗"
     le_col = st.columns([1]*(len(lala)) + [5], vertical_alignment = "center")
     for i, icon in enumerate(lala):
         with le_col[i]:
@@ -126,7 +127,7 @@ def updating(quote, context):
                       on_click = copyclip, args = [quote, context]) 
             else:
                 st.button(icon, key = get_rnd_key(), 
-                      on_click = add_react, args = [quote.text_tok, icon, context]) 
+                      on_click = add_react, args = [quote.text_tok, icon, context, toast = False]) 
             
     new_title = quote.title
     new_text = quote.text

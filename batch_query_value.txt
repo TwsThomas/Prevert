@@ -1,0 +1,2 @@
+(CURRENT_timestamp(), "la pluie lourde s enfonce dans la mer inutile inutile", "localhost", "delete", "None", "None", "None", "None", "None") ,
+(CURRENT_timestamp(), "inutile inutile la pluie lourde s enfonce s enfonce dans la mer", "localhost", "delete", "None", "None", "None", "None", "None") ,

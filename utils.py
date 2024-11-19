@@ -30,11 +30,6 @@ def print_int(x):
         return str(int(np.round(x/1000, 0))) + "k"
     return str(int(np.round(x, 0)))
 
-def clear_cache():
-    # not tested
-    st.caching.clear_cache()
-    st.toast("Cache cleared")
-
 @st.dialog("Raccourcis dans la barre de recherche")
 def help(context):
     st.write('🦋🦎🎶🔥🐉🧞🍄🌈🌚⛩️')
@@ -155,14 +150,17 @@ def updating(quote, context):
     #     new_note_saved = add_note.replace('\n','  /n/')
     #     update_quote(quote[0], 'vo', new_note_saved, context)
 
-def dump_raw(raw_data):
+def dump_data_ram(raw_data):
     # import pickle
     # pickle.dump(raw_data.drop(['Unnamed: 0.1','Unnamed: 0', 'all_search'], axis=1), open('data/raw_data_v1_17_nov.pkl', 'wb'))
     # raw_data.to_csv('data/raw_data_v1x.csv', index = False)
     # raw_data.drop(['Unnamed: 0.1','Unnamed: 0', 'all_search'], axis=1).to_parquet('data/raw_data_v1_17_nov.parquet', index = False)
-    raw_data.head(900).to_parquet('data/raw_data_sample_900.parquet', index = False)
-    st.toast(f'\n {len(raw_data)} parquet clean')
-    st.write(f'\n {len(raw_data)} parquet clean')
+    raw_data.head(10).to_csv('data_v2/data_ram_10.csv', index = True)
+    raw_data.to_csv('data_v2/data_ram.csv', index = True)
+    raw_data.head(10).to_parquet('data_v2/data_ram_10.parquet', index = True)
+    raw_data.to_parquet('data_v2/data_ram.parquet', index = True)
+    st.toast(f'\n {len(raw_data)} csv clean')
+    st.write(f'\n {len(raw_data)} csv clean')
 
 
 def bq_update_data():

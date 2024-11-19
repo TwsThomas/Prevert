@@ -92,9 +92,9 @@ update_react AS(
     SELECT
         text_tok,
         MAX(timestamp) as updated_timestamp,
-        STRING_AGG(new_value) as new_quote_react
+        STRING_AGG(new_value, "") as new_quote_react
     FROM events
-    WHERE action = "update" and field = "react"
+    WHERE action = "react"
     GROUP BY text_tok
 ),
 
@@ -153,7 +153,7 @@ SELECT
     ) AS quote, -- everything we'd scrapped
     
     STRUCT(
-        COALESCE(update_react.new_quote_react, r.quote_react) as quote_react,
+        concat(update_react.new_quote_react, r.quote_react) as quote_react,
         COALESCE(update_note.new_note, r.vo) as note
     ) AS extra, -- extra info added by user
     

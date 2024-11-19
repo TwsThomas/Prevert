@@ -163,6 +163,9 @@ if "get_context" in search_query:
     st.write(st.context.headers)
     st.stop()
 
+# if "dump_data_ram" in search_query:
+#     dump_data_ram(raw_data)
+#     st.stop()
 if "bq_update" in search_query:
     st.write('run bq_update_data()')
     bq_update_data()
@@ -174,11 +177,12 @@ if "bq_run" in search_query or "bq_sync" in search_query or "bq_batch" in search
     try:
         with open('batch_query_value.txt', 'r') as f:
             query_values = f.read()[:-2] # remove last comma
-            pd.read_gbq(bq_insert_query_intro + query_values, credentials=credentials)
-            st.toast("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
-            st.write("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
-        with open('batch_query_value.txt', 'w') as f:
-            f.write("")
+            if len(query_values) > 0:
+                pd.read_gbq(bq_insert_query_intro + query_values, credentials=credentials)
+                st.toast("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
+                st.write("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
+            with open('batch_query_value.txt', 'w') as f:
+                f.write("")
     except Exception as e:
         print('unable to insert event', e,  e.__class__.__name__, e.__class__,)
         st.write('/!!\ Unable to insert event', e,  e.__class__.__name__, e.__class__,)
@@ -187,7 +191,8 @@ if "bq_run" in search_query or "bq_sync" in search_query or "bq_batch" in search
     st.write('run bq_update_data()')
     bq_update_data()
     st.write('Done')
-    st.toast('Done !')
+    load_data.clear()
+    st.toast('Clean & Done !')
     st.stop()
 
 # if "dump_raw" in search_query:

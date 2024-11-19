@@ -18,7 +18,7 @@ VALUES
 @st.cache_data
 def load_data():
     data_ram = pd.read_parquet('data_v2/data_ram.parquet')
-    data_ram.set_index('text_tok', inplace = True, drop = True)
+    # data_ram.set_index('text_tok', inplace = True, drop = True)
     data_ram['all_search'] = (data_ram.index.astype(str)) + (data_ram['author'].astype(str).apply(tokenize)) + (data_ram['book'].astype(str).apply(tokenize)) + (data_ram['title'].astype(str).apply(tokenize)) + data_ram['quote_react'].astype(str)
     data_ram.sort_values('nb_like', ascending = False, inplace = True)
     return data_ram
@@ -156,10 +156,10 @@ def dump_data_ram(raw_data):
     # pickle.dump(raw_data.drop(['Unnamed: 0.1','Unnamed: 0', 'all_search'], axis=1), open('data/raw_data_v1_17_nov.pkl', 'wb'))
     # raw_data.to_csv('data/raw_data_v1x.csv', index = False)
     # raw_data.drop(['Unnamed: 0.1','Unnamed: 0', 'all_search'], axis=1).to_parquet('data/raw_data_v1_17_nov.parquet', index = False)
-    raw_data.head(10).to_csv('data_v2/data_ram_10.csv', index = True)
-    raw_data.to_csv('data_v2/data_ram.csv', index = True)
-    raw_data.head(10).to_parquet('data_v2/data_ram_10.parquet', index = True)
-    raw_data.to_parquet('data_v2/data_ram.parquet', index = True)
+    raw_data.head(10).to_csv('data_v2/dump_data_ram_10.csv', index = True)
+    raw_data.to_csv('data_v2/dump_data_ram.csv', index = True)
+    raw_data.head(10).to_parquet('data_v2/dump_data_ram_10.parquet', index = True)
+    raw_data.to_parquet('data_v2/dump_data_ram.parquet', index = True)
     st.toast(f'\n {len(raw_data)} csv clean')
     st.write(f'\n {len(raw_data)} csv clean')
 

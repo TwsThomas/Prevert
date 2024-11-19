@@ -17,9 +17,10 @@ VALUES
 
 @st.cache_data
 def load_data():
-    data_ram = pd.read_parquet('data_v2/raw_data_v1_17_nov_.parquet')
+    data_ram = pd.read_parquet('data_v2/data_ram.parquet')
     data_ram.set_index('text_tok', inplace = True, drop = True)
     data_ram['all_search'] = (data_ram.index.astype(str)) + (data_ram['author'].astype(str).apply(tokenize)) + (data_ram['book'].astype(str).apply(tokenize)) + (data_ram['title'].astype(str).apply(tokenize)) + data_ram['quote_react'].astype(str)
+    data_ram.sort_values('nb_like', ascending = False, inplace = True)
     return data_ram
 
 def get_rnd_key():

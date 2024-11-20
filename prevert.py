@@ -5,6 +5,7 @@ import pandas as pd
 import numpy as np
 from unidecode import unidecode
 from copy import copy
+from scrap_utils import tokenize
 
 import streamlit as st
 from st_keyup import st_keyup # pip install streamlit-keyup
@@ -46,15 +47,11 @@ search_query = st_keyup(label = "Enter a value", key="uuid_keyup",
                          label_visibility="collapsed", debounce=400,
                          value = init_search)
 
-if context == "android":
-    pass
-    # st.toggle("Hello", value = False)
-    # st.button("Yo")
-    # st.button("Pla")
 
 ### load data
-data = load_data()
-raw_data = copy(data)
+all_data = load_data()
+if 'extra_data' in st.session_state:
+    all_data = pd.concat([st.session_state['extra_data'], all_data,], axis = 0)
 
 
 # cc = st.color_picker('ccc', '#349E77') # #349E77 vert #C79236 orange 
@@ -73,18 +70,12 @@ with list_col_ui[1]:
 with list_col_ui[2]:
     only_react = st.toggle("Réactions", value = False)
 
-# with list_col_ui[-4]:
-#     st.button("dump_raw", key = get_rnd_key(), on_click = dump_raw, args = [raw_data])
 with list_col_ui[-1]:
     st.button("Help", key = get_rnd_key(), on_click = help, args=[context])
-# with list_col_ui[-2]:
-#     st.button("BQ get", key = get_rnd_key(), on_click = read_bq, args = [search_query]) # "SELECT * from `prevert.v1.sample` limit 10"
-# with list_col_ui[-1]:
-#     st.button("BQ ins", key = get_rnd_key(), on_click = bq_insert_event, args = ["Scobydoo-bee-doo", "title", "Hello"])
 
 
 ### Filter data -- search
-current_data = data
+current_data = all_data
 if search_query != "":
     search_words = unidecode(search_query.lower()) + " ".join([x for x in search_query if x in all_emoji])
     for word in search_words.split(" "):
@@ -104,15 +95,16 @@ ac = current_data.groupby('author')['text'].count()
 al = current_data.groupby('author')['nb_like'].sum()
 stats = pd.merge(ac, al, on = 'author').rename(columns = {'text': 'Citations', 'nb_like': 'Like'}).sort_values('Like', ascending = False)
 author_options = ['All ' + print_int(len(current_data)),] 
-for ii, (row, data) in enumerate(stats.iterrows()):
+for ii, (row, _) in enumerate(stats.iterrows()):
     if ii < n_max_author:
         author_options.append(f"{row}  {print_int(len(current_data[current_data.author == row]))}")
     else:
         author_options.append('...')
         break
 select_author = None
-select_author = st.radio("radio", options= author_options,
-        horizontal= True, label_visibility = 'collapsed')
+if len(author_options) > 1:
+    select_author = st.radio("radio", options= author_options,
+            horizontal= True, label_visibility = 'collapsed')
 
 if select_author is None:
     pass
@@ -134,7 +126,7 @@ if "+" in search_query:
 if "*" in search_query:
     display_data = current_data
 if "stats" in search_query:
-    get_stats(raw_data, raw_data)
+    get_stats(all_data)
     st.stop()
 # "quote;author;;" in search_query
 if ";;" == search_query[-2:]:
@@ -149,7 +141,8 @@ if ";;" == search_query[-2:]:
 
     st.write("Création d'une nouvelle citation : ")
     bq_insert_event(text, "create", column=None, new_value=None,title=None,author=author, note=None, context=context)
-    st.write({"texte": text, "Auteur": author})
+    all_data = data_append(all_data, text, author, title="", note="", context=context)
+    st.write({"Texte": text, "Auteur": author})
     st.stop()
 if "help" in search_query:
     help(context)
@@ -163,34 +156,34 @@ if "get_context" in search_query:
     st.write(st.context.headers)
     st.stop()
 
+if "st.session_state" in search_query:
+    st.write(st.session_state)
+    st.stop()
+
 # if "dump_data_ram" in search_query:
 #     dump_data_ram(raw_data)
 #     st.stop()
-if "bq_update" in search_query:
-    st.write('run bq_update_data()')
-    bq_update_data()
-    st.write('Done')
-    st.toast('Done !')
-    st.stop()
-if "bq_run" in search_query or "bq_sync" in search_query or "bq_batch" in search_query:
+
+if search_query in ["run_sync", "bq_run", "bq_sync", "bq_batch", "bq_update"]:
     """ Insert into bq.events all batch_query_value.txt then update data """
-    try:
-        with open('batch_query_value.txt', 'r') as f:
-            query_values = f.read()[:-2] # remove last comma
-            if len(query_values) > 0:
-                pd.read_gbq(bq_insert_query_intro + query_values, credentials=credentials)
-                st.toast("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
-                st.write("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
-            with open('batch_query_value.txt', 'w') as f:
-                f.write("")
-    except Exception as e:
-        print('unable to insert event', e,  e.__class__.__name__, e.__class__,)
-        st.write('/!!\ Unable to insert event', e,  e.__class__.__name__, e.__class__,)
-        st.toast(e.__class__)
-        st.stop()
+    if 'local' in context:
+        try:
+            with open('batch_query_value.txt', 'r') as f:
+                query_values = f.read()[:-2] # remove last comma
+                if len(query_values) > 0:
+                    pd.read_gbq(bq_insert_query_intro + query_values, credentials=credentials)
+                    st.toast("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
+                    st.write("batch send to BQ\n\n", str(len(query_values.split('\n'))), "elements")
+                with open('batch_query_value.txt', 'w') as f:
+                    f.write("")
+        except Exception as e:
+            print('unable to insert event', e,  e.__class__.__name__, e.__class__,)
+            st.write('/!!\ Unable to insert event', e,  e.__class__.__name__, e.__class__,)
+            st.toast(e.__class__)
+            st.stop()
     st.write('run bq_update_data()')
     bq_update_data()
-    st.write('Done')
+    st.write(':blue[Done --]')
     load_data.clear()
     st.toast('Clean & Done !')
     st.stop()
@@ -212,7 +205,7 @@ for i, quote in enumerate(display_data.itertuples()):
     text_tok = quote[0]
     current_expand = len(quote.text.split('\n')) < 7 and len(quote.text) < 900
     like_str = f'{int(np.round(quote.nb_like, 0))}' if (str(quote.nb_like) not in ['nan', '0', '0.0', '0.', 'None']) else ""
-    title_str = f"{quote.title if (str(quote.title) != 'nan' and len(str(quote.title)) > 1) else ''}" 
+    title_str = f"{quote.title if (str(quote.title) not in ['nan', 'None', None] and len(str(quote.title)) > 1) else ''}" 
     
     title_color = 'grey'
     # :red :orange :green :blue :violet :grey :rainbow :blue-background
@@ -256,13 +249,13 @@ for i, quote in enumerate(display_data.itertuples()):
             st.write(f"{quote.text}")
             # :rainbow[]
         
-        if str(quote.vo) != 'nan':
-            st.write(f":grey[{quote.vo}]")
+        if str(quote.note) not in ['nan', 'None', None, '']:
+            st.write(f":grey[{quote.note}]")
 
         info = "    " +\
-             (f"{quote.book}" if str(quote.book) not in  ["None", 'nan'] else "") +\
-             (f", p{quote.page}" if str(quote.page) not in  ["None", 'nan'] else "") +\
-             (f", {quote.year}" if str(quote.year) not in  ["None", 'nan'] else "")
+             (f"{quote.book}" if str(quote.book) not in  ["None", 'nan'] else "")
+            #  (f", p{quote.page}" if str(quote.page) not in  ["None", 'nan'] else "") +\
+            #  (f", {quote.year}" if str(quote.year) not in  ["None", 'nan'] else "")
             #  f"{quote.nb_lines} ({quote.nb_char}) - " +\
             #  f"{quote.author}" +\
             #  f"{quote.source} - " +\

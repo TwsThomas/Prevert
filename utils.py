@@ -19,7 +19,7 @@ VALUES
 def load_data():
     data_ram = pd.read_parquet('data_v2/data_ram.parquet')
     # data_ram.set_index('text_tok', inplace = True, drop = True)
-    data_ram['all_search'] = (data_ram.index.astype(str)) + (data_ram['author'].astype(str).apply(tokenize)) + (data_ram['book'].astype(str).apply(tokenize)) + (data_ram['title'].astype(str).apply(tokenize)) + data_ram['quote_react'].astype(str)
+    data_ram['all_search'] = (data_ram.index.astype(str)) + (data_ram['author'].astype(str).apply(tokenize))+ (data_ram['text'].astype(str).apply(tokenize)) + (data_ram['book'].astype(str).apply(tokenize)) + (data_ram['title'].astype(str).apply(tokenize)) + data_ram['quote_react'].astype(str)
     data_ram.sort_values('nb_like', ascending = False, inplace = True)
     return data_ram
 
@@ -45,18 +45,17 @@ def help(context):
     # st.write(' -- debug')
     st.write(' :green[get_context] : :grey[get current context (localhost vs web)]')
     if 'local' in context:
-        st.write(' :green[bq_update] : :grey[download events in BQ, conat and save in data_v2/data_ram.parquet]')
-        st.write(' :green[bq_batch] : :grey[Send the update-batch from csv to BQ then update data]')
-        st.write(' :green[bq_run] : :grey[Send the update-batch from csv to BQ then update data]')
+        st.write(' :green[run_sync] or :green[bq_sync] : :grey[Send the update-batch from csv to BQ then update data, concat and save in data_v2/data_ram.parquet]')
+    st.write('Scoobydoobydoo !;Scooby-Doo;')
 
 
 # @st.dialog("Stats")
-def get_stats(ddata, raw_data):
+def get_stats(ddata):
 
-    st.write(len(raw_data[raw_data['quote_react'].notnull()]) , "emojis")
-    st.write(len(raw_data[raw_data['haiku']]) , "haikus")
-    st.write(len(raw_data[~raw_data['title'].isin({'nan', None, '', ' '})]) , "poèmes")
-    st.write(len(raw_data), "citations")
+    st.write(len(ddata[ddata['quote_react'].notnull()]) , "emojis")
+    st.write(len(ddata[ddata['haiku']]) , "haikus")
+    st.write(len(ddata[~ddata['title'].isin({'nan', None, '', ' '})]) , "poèmes")
+    st.write(len(ddata), "citations")
 
     ac = ddata.groupby('author')['text'].count()
     al = ddata.groupby('author')['nb_like'].sum()
@@ -69,10 +68,12 @@ def get_stats(ddata, raw_data):
     st.write(stats)
 
 
-def bq_insert_event(text_tok, action, column=None, new_value=None,title=None,author=None,note=None, context=None):
+def bq_insert_event(text, action, column=None, new_value=None,title=None,author=None,note=None, context=None):
     try:
         credentials = service_account.Credentials.from_service_account_info(st.secrets["gcp_service_account"])
-        query_value = f'(CURRENT_timestamp(), "{text_tok}", "{context}", "{action}", "{column}", "{new_value}", "{title}", "{author}", "{note}")'
+        sn = "\n"
+        ssn = "\\n"
+        query_value = fr"""(CURRENT_timestamp(), "{text.replace(sn, ssn)}", "{context}", "{action}", "{column}", "{new_value}", "{title}", "{author}", "{note}")"""
         if context == "localhost":
             with open('batch_query_value.txt', 'a') as f:
                 f.write(query_value + ' ,\n')
@@ -164,6 +165,16 @@ def dump_data_ram(raw_data):
     st.write(f'\n {len(raw_data)} csv clean')
 
 
+def data_append(data_ram, text, author, title = "", note = "", context = ""):
+    """ add a new citation on the ram (for cosmetic purpose) """
+    new_data = pd.DataFrame({'text': text, 'author': author, 'book' : None, 'title': title, 'nb_like':0, "haiku" : False, "quote_react" : "🐉🐉🐉",
+                              'note': note, 'all_search': tokenize(text) + author + title + note},
+                              index = [text])
+    if "extra_data" not in st.session_state:
+        st.session_state['extra_data'] = new_data
+    else:
+        st.session_state['extra_data'] = pd.concat([st.session_state['extra_data'], new_data], axis = 0)
+
 def bq_update_data():
     """ load data_v1 from parquet
     and events from BQ 
@@ -185,28 +196,28 @@ def bq_update_data():
     with open('bq_view_updated.sql', 'r') as f:
         query_view = f.read()
     df_updated = pd.read_gbq(query_view, credentials=credentials)
-    st.write('events loaded')
+    st.write(f'{len(df_updated)} events loaded')
 
     df_updated['text'] = df_updated['quote'].apply(lambda x: x.get('text', ''))
-    df_updated['text_tok'] = df_updated['quote'].apply(lambda x: tokenize(x.get('text', '')))
+    df_updated['text_tok'] = df_updated['quote'].apply(lambda x: x.get('text', '')) # no tokenize (events text_tok are consider as is (will be tokenize in all_search))
     df_updated['author'] = df_updated['quote'].apply(lambda x: x.get('author', ''))
     df_updated['book'] = df_updated['quote'].apply(lambda x: x.get('book', ''))
     df_updated['title'] = df_updated['quote'].apply(lambda x: x.get('title', ''))
     df_updated['quote_react'] = df_updated['extra'].apply(lambda x: x.get('quote_react', ''))
     df_updated['note'] = df_updated['extra'].apply(lambda x: x.get('note', ''))
     df_updated['haiku'] = df_updated['text'].apply(lambda x: len(x.split('\n')) == 3)
-    df_updated['nb_like'] = 0
-    df_updated['all_search'] = (df_updated['text_tok'].astype(str)) + (df_updated['author'].astype(str).apply(tokenize)) + (df_updated['book'].astype(str).apply(tokenize)) + (df_updated['title'].astype(str).apply(tokenize)) + df_updated['quote_react'].astype(str)
+    df_updated['nb_like'] = df_updated['quote_react'].apply(lambda x: (len(x) * 50) if x is not None else 0)
+    df_updated['all_search'] = (df_updated['text_tok'].astype(str).apply(tokenize)) + ' ' + (df_updated['author'].astype(str).apply(tokenize)) +' ' + (df_updated['book'].astype(str).apply(tokenize)) + ' ' +(df_updated['title'].astype(str).apply(tokenize)) +' ' + df_updated['quote_react'].astype(str)
 
     df_updated = df_updated[['text', 'author', 'book', 'title', 'nb_like', 'text_tok', 'haiku', 'quote_react', 'note', 'all_search', 'is_delete']]
     df_updated.set_index('text_tok', inplace = True, drop = True)
 
     data_ram = pd.concat([df_updated, data_v1], axis = 0)
+    data_ram['is_delete'] = data_ram['is_delete'].replace(np.nan, False)
     # drop duplicates index
     data_ram = data_ram[~data_ram.index.duplicated(keep='first')]
     data_ram.sort_values('nb_like', ascending = False, inplace = True)
-    data_ram.dropna(subset=['is_delete'], inplace = True)
-    data_ram = data_ram[data_ram['is_delete'] == False]
+    data_ram = data_ram[~data_ram['is_delete']]
     data_ram.drop(['is_delete', 'all_search'], axis = 1, inplace = True)
     # data_ram.drop(['is_delete'], axis = 1, inplace = True)
 
@@ -222,4 +233,4 @@ def bq_update_data():
 
     st.write('data_ram updated')
     data_ram.to_parquet('data_v2/data_ram.parquet')
-    st.write('data_ram dumped')
+    st.write('data_ram dumped on data_v2/data_ram.parquet')

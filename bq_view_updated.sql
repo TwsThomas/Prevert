@@ -127,7 +127,7 @@ raw_data AS(
     from `prevert.v1.raw_data_parquet_17_nov` -- raw data from the 17th of November 2024
 ),
 
-final AS(    
+v1 AS(    
 SELECT
     r.timestamp,
     GREATEST(
@@ -175,9 +175,64 @@ left join update_note on r.text_tok = update_note.text_tok
 left join update_author on r.text_tok = update_author.text_tok
 left join update_text on r.text_tok = update_text.text_tok
 -- where update_delete.is_delete is null -- remove the deleted events
-)
+),
 
-select * from final
-where updated_timestamp > "2024-11-17 10:00:00"
+merge_v1_and_create AS(
+select * from v1
+-- where updated_timestamp > "2024-11-17 10:00:00"
 union all 
 select * from update_create
+),
+
+update_v1_and_create AS(    
+SELECT
+    r.timestamp,
+    GREATEST(
+    COALESCE(r.timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_title.updated_timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_author.updated_timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_text.updated_timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_vo.updated_timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_react.updated_timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_note.updated_timestamp, "2024-11-17 00:00:00"),
+    COALESCE(update_delete.updated_timestamp, "2024-11-17 00:00:00")) as updated_timestamp,
+
+    STRUCT(
+        COALESCE(update_title.new_title, r.quote.title) as title,
+        COALESCE(update_author.new_author, r.quote.author) as author,
+        COALESCE(update_text.new_text, r.quote.text) as text,
+        r.quote.book,
+        r.quote.source,
+        r.quote.confiance,
+        r.quote.nb_like,
+        r.quote.page,
+        r.quote.url
+    ) AS quote, -- everything we'd scrapped
+    
+    STRUCT(
+        concat(update_react.new_quote_react, r.extra.quote_react) as quote_react,
+        COALESCE(update_note.new_note, r.extra.note) as note
+    ) AS extra, -- extra info added by user
+    
+    STRUCT(
+        r.info.text_tok,
+        r.info.nb_char,
+        r.info.nb_lines,
+        r.info.haiku,
+        r.info.sonnet
+    ) AS info, -- info post computed on local
+
+    update_delete.is_delete,
+from merge_v1_and_create r
+left join update_title on r.info.text_tok = update_title.text_tok
+left join update_vo on r.info.text_tok = update_vo.text_tok
+left join update_react on r.info.text_tok = update_react.text_tok
+left join update_delete on r.info.text_tok = update_delete.text_tok
+left join update_note on r.info.text_tok = update_note.text_tok
+left join update_author on r.info.text_tok = update_author.text_tok
+left join update_text on r.info.text_tok = update_text.text_tok
+-- where update_delete.is_delete is null -- remove the deleted events
+)
+
+select * from update_v1_and_create
+where updated_timestamp > "2024-11-17 10:00:00"

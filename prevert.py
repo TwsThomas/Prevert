@@ -40,7 +40,7 @@ if context == "android":
     st.title("🦋🦎🍄🎶🌈🌚") 
 else:
     st.title("🦋 🦎 🎶 🔥 🐉 🧞 " + ("🍄" if context == "localhost" else "⛩️") +" 🌈 🌚 ")
-all_emoji = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☢️⛩️🌚꩜🐘" + "𝄞☯︎☣☘︎꩜⛩❄⚝☠𓆝⚕️⚛♫𓆈𓆉𓆏𓆸𓃰𓃥𓆝"
+all_emoji = "🦎🔥🦋🎶🐉🧞🍄🌈🌚☘️☢️⛩️🌚꩜🐘🩸🎏" + "𝄞☯︎☣☘︎꩜⛩❄⚝☠𓆝⚕️⚛♫𓆈𓆉𓆏𓆸𓃰𓃥𓆝"
 
 init_search = st.query_params.get("search", "").replace('_', ' ')
 search_query = st_keyup(label = "Enter a value", key="uuid_keyup",
@@ -56,6 +56,66 @@ if 'extra_data' in st.session_state:
 
 # cc = st.color_picker('ccc', '#349E77') # #349E77 vert #C79236 orange 
 # l_cc_haiku = ["#603D03", # marron               # "#38ECDE", # cyan               "#9A9317", # yellow               "#A45918", # orange               "#344AB1", # blue               "#8426B5", # purple               "#D25456", # red               "#94923A", # mousse               ]
+
+### Special search
+if "stats" in search_query:
+    get_stats(all_data)
+    st.stop()
+# "quote;author;;" in search_query
+if ";;" == search_query[-2:]:
+    pp = search_query[:-2].split(";")
+    author = "Inconnu"
+    if len(pp) == 1:
+        text = pp[0]
+    if len(pp) == 2:
+        text, author = pp[0].strip(), pp[1].strip()
+        if len(author) > len(text):
+            text, author = author, text
+
+    st.write("Création d'une nouvelle citation : ")
+    bq_insert_event(text, "create", column=None, new_value=None,title=None,author=author, note=None, context=context)
+    all_data = data_append(all_data, text, author, title="", note="", context=context)
+    st.write({"Texte": text, "Auteur": author})
+    st.stop()
+if "help" in search_query:
+    help(context)
+
+# local functions
+if "get_context" in search_query:
+    with open('batch_query_value.txt', 'r') as f:
+            query_values = f.read()[:-1]
+    st.write("context: " + context)
+    st.write(st.query_params)
+    st.write(st.context.headers)
+    st.stop()
+
+if "st.session_state" in search_query:
+    st.write(st.session_state)
+    st.stop()
+if search_query in ["run_sync", "bq_run", "bq_sync", "bq_batch", "bq_update"]:
+    st.write('run bq_update_data()')
+    """ Insert into bq.events all batch_query_value.txt then update data """
+    if 'local' in context:
+        try:
+            with open('batch_query_value.txt', 'r') as f:
+                query_values = f.read()[:-2] # remove last comma
+                if len(query_values) > 0:
+                    pd.read_gbq(bq_insert_query_intro + query_values, credentials=credentials)
+                    st.toast("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
+                    st.write("batch send to BQ\n\n", str(len(query_values.split('\n'))), "elements")
+                with open('batch_query_value.txt', 'w') as f:
+                    f.write("")
+        except Exception as e:
+            print('unable to insert event', e,  e.__class__.__name__, e.__class__,)
+            st.write('/!!\ Unable to insert event', e,  e.__class__.__name__, e.__class__,)
+            st.toast(e.__class__)
+            st.stop()
+    st.write('run bq_update_data()')
+    bq_update_data()
+    st.write(':blue[Done --]')
+    load_data.clear()
+    st.toast('Clean & Done !')
+    st.stop()
 
 ### UI
 nb_columns = 2
@@ -117,7 +177,7 @@ else:
     current_data = current_data[current_data.author == select_author_name]
 
 
-### Special search 
+### Search display results
 if '?' in search_query:
     current_data = current_data.sample(frac = 1, replace=False, random_state = len(search_query))
 display_data = current_data[:30]
@@ -125,72 +185,10 @@ if "+" in search_query:
     display_data = current_data[:100]
 if "*" in search_query:
     display_data = current_data
-if "stats" in search_query:
-    get_stats(all_data)
-    st.stop()
-# "quote;author;;" in search_query
-if ";;" == search_query[-2:]:
-    pp = search_query[:-2].split(";")
-    author = "Inconnu"
-    if len(pp) == 1:
-        text = pp[0]
-    if len(pp) == 2:
-        text, author = pp[0].strip(), pp[1].strip()
-        if len(author) > len(text):
-            text, author = author, text
-
-    st.write("Création d'une nouvelle citation : ")
-    bq_insert_event(text, "create", column=None, new_value=None,title=None,author=author, note=None, context=context)
-    all_data = data_append(all_data, text, author, title="", note="", context=context)
-    st.write({"Texte": text, "Auteur": author})
-    st.stop()
-if "help" in search_query:
-    help(context)
-
-# local functions
-if "get_context" in search_query:
-    with open('batch_query_value.txt', 'r') as f:
-            query_values = f.read()[:-1]
-    st.write("context: " + context)
-    st.write(st.query_params)
-    st.write(st.context.headers)
-    st.stop()
-
-if "st.session_state" in search_query:
-    st.write(st.session_state)
-    st.stop()
 
 # if "dump_data_ram" in search_query:
 #     dump_data_ram(raw_data)
 #     st.stop()
-
-if search_query in ["run_sync", "bq_run", "bq_sync", "bq_batch", "bq_update"]:
-    """ Insert into bq.events all batch_query_value.txt then update data """
-    if 'local' in context:
-        try:
-            with open('batch_query_value.txt', 'r') as f:
-                query_values = f.read()[:-2] # remove last comma
-                if len(query_values) > 0:
-                    pd.read_gbq(bq_insert_query_intro + query_values, credentials=credentials)
-                    st.toast("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
-                    st.write("batch send to BQ\n\n", str(len(query_values.split('\n'))), "elements")
-                with open('batch_query_value.txt', 'w') as f:
-                    f.write("")
-        except Exception as e:
-            print('unable to insert event', e,  e.__class__.__name__, e.__class__,)
-            st.write('/!!\ Unable to insert event', e,  e.__class__.__name__, e.__class__,)
-            st.toast(e.__class__)
-            st.stop()
-    st.write('run bq_update_data()')
-    bq_update_data()
-    st.write(':blue[Done --]')
-    load_data.clear()
-    st.toast('Clean & Done !')
-    st.stop()
-
-# if "dump_raw" in search_query:
-#     st.toast(f'wanna \n {len(raw_data)} sss')
-#     dump_raw(raw_data)
 
 
 ### Display data

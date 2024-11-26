@@ -7,3 +7,6 @@ __pycache__/*
 .vscode/*
 *.ipynb_checkpoints/*
 *.log
+utils.*.pyc
+batch_query_value.txt
+.DS_Store

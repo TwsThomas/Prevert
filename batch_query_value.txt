@@ -1,7 +1,0 @@
-(CURRENT_timestamp(), "Inutile ! inutile !  \n– la pluie lourde s’enfonce  \nDans la mer", "localhost", "delete", "None", "None", "None", "None", "None") ,
-(CURRENT_timestamp(), "inutile inutile la pluie lourde s enfonce s enfonce dans la mer", "localhost", "delete", "None", "None", "None", "None", "None") ,
-(CURRENT_timestamp(), "inutile inutile la pluie lourde s enfonce s enfonce dans la mer13", "localhost", "delete", "None", "None", "None", "None", "None") ,
-(CURRENT_timestamp(), "il brama trois fois puis on ne l entendit plus le cerf sous la pluie", "localhost", "react", "None", "🌚", "None", "None", "None") ,
-(CURRENT_timestamp(), "neige qui tombait sur nous deux es tu la meme cette annee", "localhost", "react", "None", "🌚", "None", "None", "None") ,
-(CURRENT_timestamp(), "debris sur le lac mon ame est triste", "localhost", "react", "None", "🌚", "None", "None", "None") ,
-(CURRENT_timestamp(), "Rien ne dit  \nDans le chant de la cigale  \nQu'elle est près de sa fin.", "localhost", "react", "None", "🌚", "None", "None", "None") ,

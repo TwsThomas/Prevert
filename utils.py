@@ -252,4 +252,5 @@ def clean_authors(data_ram):
 
     data_ram['author'] = data_ram['author'].apply(lambda x: "Jacques Prévert" if 'prevert' in tokenize(x) else x)
     data_ram['author'] = data_ram['author'].apply(lambda x: "Christian Bobin ☘️" if 'bobin' in x.lower() else x)
+    data_ram['author'] = data_ram['author'].apply(lambda x: "Tiktok" if 'tiktok' in x.lower() else x)
     return data_ram

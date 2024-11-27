@@ -5,7 +5,6 @@ import requests
 from unidecode import unidecode
 import time
 
-from bs4 import BeautifulSoup
 
 def tokenize(text):
     return re.sub(' +', ' ', re.sub("\W+", ' ', unidecode(text.lower()))).strip(' \n')
@@ -206,6 +205,8 @@ def scrap_recent_babelio():
 
 
 def extract_poems_eclair(url = "https://www.eternels-eclairs.fr/poemes-prevert.php"):
+    from bs4 import BeautifulSoup
+    
     response = requests.get(url)
     html_content = response.content # .decode('utf-8')
     soup = BeautifulSoup(html_content, 'html.parser')

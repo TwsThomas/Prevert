@@ -157,7 +157,7 @@ stats = pd.merge(ac, al, on = 'author').rename(columns = {'text': 'Citations', '
 author_options = ['All ' + print_int(len(current_data)),] 
 for ii, (row, _) in enumerate(stats.iterrows()):
     if ii < n_max_author:
-        author_options.append(f"{row}  {print_int(len(current_data[current_data.author == row]))}")
+        author_options.append(f"{row}  *{print_int(len(current_data[current_data.author == row]))}*")
     else:
         author_options.append('...')
         break

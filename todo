@@ -1,9 +1,8 @@
-- Paroles, Prevert
 - Gai savoir
 - Bobin
-- Eluard
 - more haikus
 
+- add scrap_poemesco to BQ
 - share with url and paragraph within st.query_params
 - search into full books
 - tags (gpt + search / dataframe)

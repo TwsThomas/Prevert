@@ -1,0 +1,2 @@
+(CURRENT_timestamp(), "soyez vous meme les autres sont deja pris", "localhost", "react", "None", "🍄", "None", "None", "None") ,
+(CURRENT_timestamp(), "qui sourit n est pas toujours heureux il y a des larmes dans le coeur qui n atteignent pas les yeux orgueil et prejuges", "localhost", "react", "None", "🦎", "None", "None", "None") ,

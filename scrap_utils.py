@@ -202,6 +202,53 @@ def scrap_recent_babelio():
             print(npage)
 
 
+
+def extract_poems_eclair(url = "https://www.eternels-eclairs.fr/poemes-prevert.php"):
+    response = requests.get(url)
+    html_content = response.content # .decode('utf-8')
+    soup = BeautifulSoup(html_content, 'html.parser')
+
+    poems = []
+    for ii, card in enumerate(soup.find_all('div', class_='card')):
+        try:
+            # (text, title, book, auteur))
+            if card.find('div', class_='poeme-texte') is not None:
+                text = '\n'.join([str(x) for x in card.find('div', class_='poeme-texte').p.contents]).replace('\n<br/>\n', '\n').replace('<br/>', '').strip()
+            elif card.find('p', class_='respecter-espaces-bruts') is not None:
+                text = card.find('p', class_='respecter-espaces-bruts').text.strip()
+            else:
+                text = card.find('div', class_='poeme-texte haiku').text.strip()
+            try:
+                title = card.h3.text.strip()
+            except:
+                title = None
+            try:
+                book = card.find('figcaption').cite.text.strip() # book
+            except:
+                book = None
+            auteur = card.find('figcaption').text.split("\n")[1].strip()[2:]
+            poems.append(Quote(text, author = auteur, book = book,
+                               source = 'eternels-eclairs', title=title,
+                               url = url))
+        except Exception as e:
+            try:
+                text = card.p.text
+                title = card.h3.text
+                figure_element = card.find('figure')
+                figcaption_element = figure_element.find('figcaption')
+                author_and_book = figcaption_element.text.strip()
+                author, book = author_and_book.split(',', 1)
+                author = author.strip()[2:]
+                book = book.strip()
+                poems.append(Quote(text, author = author, book = book,
+                               source = 'eternels-eclairs', title=title,
+                               url = url))
+            except Exception as e:
+                if ii > 0:
+                    print(ii, "Error:", e) #, e.__class__, e.__class__.__name__)
+                    # print(card)
+    return poems
+
 def run_eclair():
     l_url = """https://www.eternels-eclairs.fr/poemes-prevert.php
     https://www.eternels-eclairs.fr/poemes-chansons-textes-paroles-jacques-brel.php

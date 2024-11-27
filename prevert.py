@@ -72,7 +72,7 @@ if ";;" == search_query[-2:]:
         if len(author) > len(text):
             text, author = author, text
 
-    st.write("Création d'une nouvelle citation : ")
+    st.write(":orange[Création d'une nouvelle citation] : ")
     bq_insert_event(text, "create", column=None, new_value=None,title=None,author=author, note=None, context=context)
     all_data = data_append(all_data, text, author, title="", note="", context=context)
     st.write({"Texte": text, "Auteur": author})
@@ -84,7 +84,7 @@ if "help" in search_query:
 if "get_context" in search_query:
     with open('batch_query_value.txt', 'r') as f:
             query_values = f.read()[:-1]
-    st.write("context: " + context)
+    st.write(":orange[context]: " + context)
     st.write(st.query_params)
     st.write(st.context.headers)
     st.stop()
@@ -95,13 +95,14 @@ if "st.session_state" in search_query:
 if search_query in ["run_sync", "bq_run", "bq_sync", "bq_batch", "bq_update"]:
     st.write('run bq_update_data()')
     """ Insert into bq.events all batch_query_value.txt then update data """
+    st.write(':orange[run data_sync...]')
     if 'local' in context:
         try:
             with open('batch_query_value.txt', 'r') as f:
                 query_values = f.read()[:-2] # remove last comma
                 if len(query_values) > 0:
                     pd.read_gbq(bq_insert_query_intro + query_values, credentials=credentials)
-                    st.toast("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
+                    # st.toast("batch send to BQ\n\n" + str(len(query_values.split('\n')))  + "elements")
                     st.write("batch send to BQ\n\n", str(len(query_values.split('\n'))), "elements")
                 with open('batch_query_value.txt', 'w') as f:
                     f.write("")

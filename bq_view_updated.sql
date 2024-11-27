@@ -153,7 +153,7 @@ SELECT
     ) AS quote, -- everything we'd scrapped
     
     STRUCT(
-        concat(COALESCE(update_react.new_quote_react, ''), COALESCE(r.quote_react, '')) as quote_react,
+        CONCAT(COALESCE(update_react.new_quote_react, ''), COALESCE(r.quote_react, '')) as quote_react,
         COALESCE(update_note.new_note, r.vo) as note
     ) AS extra, -- extra info added by user
     
@@ -210,7 +210,7 @@ SELECT
     ) AS quote, -- everything we'd scrapped
     
     STRUCT(
-        concat(COALESCE(update_react.new_quote_react, ''), COALESCE(r.quote_react, '')) as quote_react,
+        concat(COALESCE(update_react.new_quote_react, ''), COALESCE(r.extra.quote_react, '')) as quote_react,
         COALESCE(update_note.new_note, r.extra.note) as note
     ) AS extra, -- extra info added by user
     

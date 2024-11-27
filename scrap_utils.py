@@ -5,6 +5,8 @@ import requests
 from unidecode import unidecode
 import time
 
+from bs4 import BeautifulSoup
+
 def tokenize(text):
     return re.sub(' +', ' ', re.sub("\W+", ' ', unidecode(text.lower()))).strip(' \n')
 

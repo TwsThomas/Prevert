@@ -5,7 +5,7 @@ import pandas as pd
 import numpy as np
 from unidecode import unidecode
 from copy import copy
-from scrap_utils import tokenize
+# from scrap_utils import tokenize
 
 import streamlit as st
 from st_keyup import st_keyup # pip install streamlit-keyup

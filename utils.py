@@ -186,6 +186,37 @@ def bq_load_v1():
     data_v1['is_delete'] = False
     return data_v1
 
+def bq_load_gai_savoir():
+    # archive from data_v1.1
+    df = pd.read_csv('data_v1.1/text_from_epub/Le Gai Savoir.csv')
+    df['text_tok'] = df['quote'].astype('str').apply(tokenize)
+    df['text'] = df['quote']
+    df['nb_like'] = 1
+    df['haiku'] = False
+    df['quote_react'] = None
+    df['note'] = None
+    df['all_search'] = (df['text_tok'].astype(str)) + (df['author'].astype(str).apply(tokenize)) + (df['book'].astype(str).apply(tokenize)) + (df['title'].astype(str).apply(tokenize)) + df['quote_react'].astype(str)
+    df['is_delete'] = False
+    df.drop(columns=['quote'], inplace=True)
+    df.set_index('text_tok', inplace = True, drop = True)
+    return df
+
+def bq_load_poemesco():
+    import os
+    l_author_ = os.listdir("data_v1.1/scrap_poemesco_poem")
+    l_df = []
+    for author in l_author_:
+        l_df.append(pd.read_csv(f"data_v1.1/scrap_poemesco_poem/{author}"))
+    df = pd.concat(l_df)
+    df.drop(['year', 'source', 'confiance', 'page', 'url', 'nb_char', 'nb_lines', 'sonnet', 'vo'], axis = 1, inplace = True)
+    df['is_delete'] = False
+    df['note'] = None
+    df['all_search'] = (df['text'].astype(str)) + (df['author'].astype(str).apply(tokenize)) + (df['title'].astype(str).apply(tokenize))
+    df.set_index('text_tok', inplace = True, drop = True)
+    df['quote_react'] = None
+    df['nb_like'] = 0
+    return df
+
 def bq_update_events_pandas(df_updated):
     # format events into pandas
     df_updated['text'] = df_updated['quote'].apply(lambda x: x.get('text', ''))
@@ -204,7 +235,7 @@ def bq_update_events_pandas(df_updated):
     return df_updated
 
 def bq_update_data():
-    """ load data_v1 from parquet
+    """ load scraped data (data_v1, data_v1.1)
     and events from BQ 
     then update all data 
     dump in data_v2/data_ram.parquet """
@@ -213,7 +244,9 @@ def bq_update_data():
 
     # load data_v1
     data_v1 = bq_load_v1()
-    st.write('data_v1 loaded')
+    data_poemesco = bq_load_poemesco()
+    data_gai_savoir = bq_load_gai_savoir()
+    st.write('data_v1.1 loaded')
 
     # load events
     with open('bq_view_updated.sql', 'r') as f:
@@ -225,7 +258,7 @@ def bq_update_data():
     df_updated = bq_update_events_pandas(events_updated)
 
     # delete & duplicate
-    data_ram = pd.concat([df_updated, data_v1], axis = 0)
+    data_ram = pd.concat([df_updated, data_v1, data_poemesco, data_gai_savoir], axis = 0)
     data_ram['is_delete'] = data_ram['is_delete'].replace(np.nan, False)
     data_ram = data_ram[~data_ram.index.duplicated(keep='first')]
     data_ram = data_ram[~data_ram['is_delete']]

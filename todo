@@ -1,9 +1,9 @@
-- Gai savoir
-- Bobin
+# https://annas-archive.org/
+- Bobin (https://annas-archive.org/search?q=Bobin%2C%20Christian%20%5BBobin%2C%20Christian%5D)
 - more haikus
 
-- add scrap_poemesco to BQ
-- share with url and paragraph within st.query_params
+# Code
+- share with url and paragraph within st.query_params (author + top words until unique quote)
 - search into full books
 - tags (gpt + search / dataframe)
 - pip install streamlit-shortcuts

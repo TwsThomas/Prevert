@@ -125,11 +125,11 @@ n_max_author = 6 if context == "android" else 13
 
 list_col_ui = st.columns([1]*8, vertical_alignment = "center")
 with list_col_ui[0]:    
-    only_haiku = st.toggle("Haiku", value = False)
+    only_haiku = st.toggle("Haiku", value = st.query_params.get("haiku") is not None)
 with list_col_ui[1]:
-    only_title = st.toggle("Poème", value = False)
+    only_title = st.toggle("Poème", value = st.query_params.get("poeme") is not None)
 with list_col_ui[2]:
-    only_react = st.toggle("Réactions", value = False)
+    only_react = st.toggle("Réactions", value = st.query_params.get("reaction") is None)
 
 with list_col_ui[-1]:
     st.button("Help", key = get_rnd_key(), on_click = help, args=[context])
@@ -226,7 +226,7 @@ for i, quote in enumerate(display_data.itertuples()):
 
     label = f":{title_color}[{quote.author}]"
     if quote.quote_react:
-        label = label + '  ' + str_quote_react
+        label = label + '  ' + str_quote_react.replace('𝄞', '')
     elif f"{title_str}" != "":
         pass
     elif like_str != "":

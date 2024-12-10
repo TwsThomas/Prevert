@@ -46,7 +46,7 @@ def help(context):
     st.write(' :green[get_context] : :grey[get current context (localhost vs web)]')
     if 'local' in context:
         st.write(' :green[run_sync] or :green[bq_sync] : :grey[Send the update-batch from csv to BQ then update data, concat and save in data_v2/data_ram.parquet]')
-    st.write('Scoobydoobydoo !;Scooby-Doo;')
+    st.write('Scoobydoobydoo !;Scooby-Doo v.7;')
 
 
 # @st.dialog("Stats")

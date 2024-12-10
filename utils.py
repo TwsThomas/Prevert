@@ -102,11 +102,16 @@ def add_react(text_tok, icon, context, toast = True):
 def remove_react(text_tok, context):
     st.toast(f'☢️ Reactions removed not implemented yet ☢️ ')
 
-def get_hyperlink(quote, context):
-    return f"https://twsthomas.streamlit.app/?search={quote.author} {' '.join([w for w in quote[0].split(' ') if len(w) > 2][:5])}".replace(' ', "_")
+def get_hyperlink(quote, context, all_data):
+    # for nb_words_to_keep in [5,7,9,11]:
+    #     search = quote.author + ' '.join([w for w in quote[0].split(' ') if len(w) > 2][:nb_words_to_keep])
+    #     if all_data[all_data['all_search'].str.contains(search, case = False).dropna()].shape[0] == 1:
+    #         break
+    nb_words_to_keep = 5
+    return f"https://twsthomas.streamlit.app/?search={quote.author} {' '.join([w for w in quote[0].split(' ') if len(w) > 2][:nb_words_to_keep])}".replace(' ', "_")
 
-def copyclip(quote, context):
-    st.code(get_hyperlink(quote, context), language="python")
+def copyclip(quote, context, all_data):
+    st.code(get_hyperlink(quote, context, all_data), language="python")
     try:
         import pyperclip
         pyperclip.copy(get_hyperlink(quote, context))
@@ -115,7 +120,7 @@ def copyclip(quote, context):
         pass
 
 @st.dialog("Edit quote")
-def updating(quote, context):
+def updating(quote, context, all_data):
     
     if context == "android":
         lala = "🦎🔥🦋🎶🐉🧞🍄🌈🩸"
@@ -126,7 +131,7 @@ def updating(quote, context):
         with le_col[i]:
             if icon == "🔗":
                 st.button(icon, key = get_rnd_key(), 
-                      on_click = copyclip, args = [quote, context]) 
+                      on_click = copyclip, args = [quote, context, all_data]) 
             else:
                 st.button(icon, key = get_rnd_key(), 
                       on_click = add_react, args = [quote[0], icon, context, False]) 
@@ -137,7 +142,7 @@ def updating(quote, context):
     new_title = st.text_input("Titre", quote.title)
     new_text = st.text_area("Citation", value = quote.text)
     new_author = st.text_input("Auteur", value = quote.author)
-    st.code(get_hyperlink(quote, context), language="python")
+    st.code(get_hyperlink(quote, context, all_data), language="python")
     # kill_react = st.button("Retirer les réactions ☢️", key = get_rnd_key(),
     #                        on_click=remove_react, args=[quote[0],context])
     # add_note = st.text_area("Notes", value = quote.vo)
@@ -226,6 +231,7 @@ def bq_update_events_pandas(df_updated):
     df_updated['book'] = df_updated['quote'].apply(lambda x: x.get('book', ''))
     df_updated['title'] = df_updated['quote'].apply(lambda x: x.get('title', ''))
     df_updated['quote_react'] = df_updated['extra'].apply(lambda x: x.get('quote_react', ''))
+    df_updated['quote_react'] = df_updated['quote_react'].apply(lambda x: x[-4:] if x is not None else None)
     df_updated['note'] = df_updated['extra'].apply(lambda x: x.get('note', ''))
     df_updated['haiku'] = df_updated['text'].apply(lambda x: len(x.split('\n')) == 3)
     df_updated['nb_like'] = df_updated['quote_react'].apply(lambda x: (len(x) * 50) if x is not None else 0)

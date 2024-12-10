@@ -129,7 +129,7 @@ with list_col_ui[0]:
 with list_col_ui[1]:
     only_title = st.toggle("Poème", value = st.query_params.get("poeme") is not None)
 with list_col_ui[2]:
-    only_react = st.toggle("Réactions", value = st.query_params.get("reaction") is None)
+    only_react = st.toggle("Réactions", value = st.query_params.get("reaction") is not None)
 
 with list_col_ui[-1]:
     st.button("Help", key = get_rnd_key(), on_click = help, args=[context])
@@ -148,7 +148,7 @@ if only_haiku:
 if only_react:
     current_data = current_data[current_data.quote_react.notnull()]
 if only_title:
-    current_data = current_data[~current_data.title.isin({'nan', None, '', ' '})]
+    current_data = current_data[~current_data.title.isin({'nan', None, '', ' ', 'Nan'})]
 
 
 ### UI Sub-Stats
@@ -204,7 +204,7 @@ for i, quote in enumerate(display_data.itertuples()):
     text_tok = quote[0]
     current_expand = len(quote.text.split('\n')) < 7 and len(quote.text) < 900
     like_str = f'{int(np.round(quote.nb_like, 0))}' if (str(quote.nb_like) not in ['nan', '0', '0.0', '0.', 'None']) else ""
-    title_str = f"{quote.title if (str(quote.title) not in ['nan', 'None', None] and len(str(quote.title)) > 1) else ''}" 
+    title_str = f"{quote.title if (str(quote.title) not in ['nan', 'None', None, '', ' '] and len(str(quote.title)) > 1) else ''}" 
     
     title_color = 'grey'
     # :red :orange :green :blue :violet :grey :rainbow :blue-background
@@ -252,7 +252,7 @@ for i, quote in enumerate(display_data.itertuples()):
             st.write(f":grey[{quote.note}]")
 
         info = "    " +\
-             (f"{quote.book}" if str(quote.book) not in  ["None", 'nan'] else "")
+             (f"{quote.book[:45]}" if str(quote.book) not in  ["None", 'nan'] else "")
             #  (f", p{quote.page}" if str(quote.page) not in  ["None", 'nan'] else "") +\
             #  (f", {quote.year}" if str(quote.year) not in  ["None", 'nan'] else "")
             #  f"{quote.nb_lines} ({quote.nb_char}) - " +\
@@ -278,7 +278,7 @@ for i, quote in enumerate(display_data.itertuples()):
                         args = [text_tok, icon, context]) 
             with list_col_button[-3]:
                 st.button("✏", key = get_rnd_key(),
-                            help = "Éditer la citation", on_click = updating, args = [quote, context])
+                            help = "Éditer la citation", on_click = updating, args = [quote, context, all_data])
             with list_col_button[-2]:
                 if context != "android":
                     st.button(f':grey[⨂]',

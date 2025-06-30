@@ -1,0 +1,3 @@
+(CURRENT_timestamp(), "Un oiseau ne chante pas parce qu'il a une réponse - il chante parce qu'il a une chant", "localhost", "update", "text", "Un oiseau ne chante pas parce qu'il a une réponse - il chante parce qu'il a un chant", "None", "None", "None") ,
+(CURRENT_timestamp(), "Un oiseau ne chante pas parce qu'il a une réponse - il chante parce qu'il a une chant", "localhost", "update", "text", "Un oiseau ne chante pas parce qu'il a une réponse - il chante parce qu'il a un chant", "None", "None", "None") ,
+(CURRENT_timestamp(), "Un oiseau perché sur un arbre n'a jamais peur que la branche casse parce que sa confiance n'est pas dans la branche, mais dans ses propres ailes.", "localhost", "react", "None", "🎶", "None", "None", "None") ,
